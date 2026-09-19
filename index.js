@@ -15,16 +15,23 @@
 // GLADYS_INTEGRATION_SELECTOR); the SDK reads them automatically.
 // -----------------------------------------------------------------------------
 
+import { readFile } from 'node:fs/promises';
 import { GladysIntegration, logger } from '@gladysassistant/integration-sdk';
 import { normalizeConfig } from './src/config.js';
 import { TleSource } from './src/tle-source.js';
 import { findVisiblePasses } from './src/pass-predictor.js';
-import { buildWidgetContent } from './src/widget-content.js';
+import { buildWidgetContent, ISS_IMAGE_KEY } from './src/widget-content.js';
 import { buildNextPassOutput } from './src/scene-actions.js';
 import { PassScheduler, buildPassStartingEventData } from './src/scene-events.js';
 import { attachRawMessageHandlers } from './src/raw-messages.js';
 
 const TLE_REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1000;
+const ISS_IMAGE_PATH = new URL('./assets/iss-illustration.png', import.meta.url);
+
+// Cached on first request: the illustration is a static asset, never changes,
+// so its image_key never needs to (section 6: "when the bytes change, the
+// key changes" — ours simply never do).
+let issImageBase64 = null;
 
 const gladys = new GladysIntegration();
 const tleSource = new TleSource();
@@ -98,6 +105,16 @@ function getWidgetContent() {
   return buildWidgetContent(passes, { tleStale: tleSource.isStale() });
 }
 
+async function getWidgetImage(imageKey) {
+  if (imageKey !== ISS_IMAGE_KEY) {
+    throw new Error(`Unknown image key: ${imageKey}`);
+  }
+  if (!issImageBase64) {
+    issImageBase64 = (await readFile(ISS_IMAGE_PATH)).toString('base64');
+  }
+  return issImageBase64;
+}
+
 function handleSceneAction(key) {
   if (key === 'next_pass') {
     return buildNextPassOutput(passes);
@@ -123,7 +140,7 @@ gladys.on('connected', async () => {
     house = await fetchHouse();
     await ensureTle();
     recomputePasses();
-    attachRawMessageHandlers(gladys, { getWidgetContent, handleSceneAction, logger });
+    attachRawMessageHandlers(gladys, { getWidgetContent, getWidgetImage, handleSceneAction, logger });
 
     if (!refreshTimer) {
       refreshTimer = setInterval(async () => {

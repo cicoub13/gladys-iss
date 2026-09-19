@@ -15,10 +15,12 @@
 // again from an `integration.on('connected', ...)` handler, not just once at
 // startup.
 //
-// The `{ content }` / `{ outputs }` wrapping below is not a guess: verified
-// against the actual (unmerged, PR #3109/#3110 branches) server code —
-// externalIntegration.getWidgetContent.js reads `result.data.content`,
-// externalIntegration.runSceneAction.js reads `result.data.outputs`.
+// The `{ content }` / `{ image }` / `{ outputs }` wrapping below is not a
+// guess: verified against the actual (unmerged, PR #3109/#3110 branches)
+// server code — externalIntegration.getWidgetContent.js reads
+// `result.data.content`, externalIntegration.getWidgetImage.js reads
+// `result.data.image`, externalIntegration.runSceneAction.js reads
+// `result.data.outputs`.
 // -----------------------------------------------------------------------------
 
 import { WIDGET_GET, WIDGET_GET_IMAGE, WIDGET_ACTION, SCENE_ACTION_RUN, COMMAND_RESULT } from './message-types.js';
@@ -29,13 +31,14 @@ import { WIDGET_GET, WIDGET_GET_IMAGE, WIDGET_ACTION, SCENE_ACTION_RUN, COMMAND_
  * @param {{ws: {on: Function, send: Function}}} integration - The SDK's GladysIntegration instance (or a test double).
  * @param {object} handlers
  * @param {() => (object|Promise<object>)} handlers.getWidgetContent - Returns the current widget content envelope (bare, not wrapped in `{ content }`).
+ * @param {(imageKey: string) => (string|Promise<string>)} handlers.getWidgetImage - Returns the raw base64 bytes of a declared image key (bare, not wrapped in `{ image }`).
  * @param {(key: string, fields: object) => (object|Promise<object>)} handlers.handleSceneAction - Returns a scene action's outputs (bare, not wrapped in `{ outputs }`), or throws.
  * @param {{error: Function}} [handlers.logger] - Optional logger for handler failures.
  * @returns {void}
  * @example
- * integration.on('connected', () => attachRawMessageHandlers(integration, { getWidgetContent, handleSceneAction }));
+ * integration.on('connected', () => attachRawMessageHandlers(integration, { getWidgetContent, getWidgetImage, handleSceneAction }));
  */
-export function attachRawMessageHandlers(integration, { getWidgetContent, handleSceneAction, logger }) {
+export function attachRawMessageHandlers(integration, { getWidgetContent, getWidgetImage, handleSceneAction, logger }) {
   integration.ws.on('message', (raw) => {
     let message;
     try {
@@ -61,8 +64,10 @@ export function attachRawMessageHandlers(integration, { getWidgetContent, handle
         );
         break;
       case WIDGET_GET_IMAGE:
+        reply(integration, message, async () => ({ image: await getWidgetImage(message.payload?.image_key) }), logger);
+        break;
       case WIDGET_ACTION:
-        // Not used by this MVP widget: no image component, no button component.
+        // Not used by this MVP widget: no button component.
         break;
       default:
         // Not one of ours: leave it to the SDK's own dispatcher (or a future one).

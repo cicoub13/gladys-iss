@@ -25,6 +25,7 @@ RUN npm ci --omit=dev
 COPY index.js ./
 COPY src ./src
 COPY gladys-assistant-integration.json ./
+COPY assets/iss-illustration.png ./assets/iss-illustration.png
 
 # The only writable location allowed at runtime (TLE cache).
 ENV NODE_ENV=production

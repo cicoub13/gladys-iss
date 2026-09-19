@@ -97,13 +97,57 @@ test('an unrecognized message type is silently ignored', async () => {
   assert.equal(integration.sent.length, 0);
 });
 
-test('widget.get-image and widget.action are accepted but produce no reply (unused by this MVP widget)', async () => {
+test('widget.action is accepted but produces no reply (no button component in this MVP widget)', async () => {
   const integration = fakeIntegration();
-  attachRawMessageHandlers(integration, { getWidgetContent: () => ({}), handleSceneAction: () => ({}) });
+  attachRawMessageHandlers(integration, {
+    getWidgetContent: () => ({}),
+    getWidgetImage: () => '',
+    handleSceneAction: () => ({}),
+  });
 
-  integration.emit({ type: WIDGET_GET_IMAGE, payload: { message_id: '1' } });
   integration.emit({ type: WIDGET_ACTION, payload: { message_id: '2' } });
   await tick();
 
   assert.equal(integration.sent.length, 0);
+});
+
+test('widget.get-image forwards the image_key and replies with the base64 bytes, acked by message_id', async () => {
+  const integration = fakeIntegration();
+  let receivedKey;
+  attachRawMessageHandlers(integration, {
+    getWidgetContent: () => ({}),
+    getWidgetImage: (imageKey) => {
+      receivedKey = imageKey;
+      return 'aGVsbG8=';
+    },
+    handleSceneAction: () => ({}),
+  });
+
+  integration.emit({ type: WIDGET_GET_IMAGE, payload: { message_id: 'img-1', image_key: 'iss-illustration' } });
+  await tick();
+
+  assert.equal(receivedKey, 'iss-illustration');
+  assert.deepEqual(integration.sent[0], {
+    type: COMMAND_RESULT,
+    payload: { message_id: 'img-1', success: true, data: { image: 'aGVsbG8=' } },
+  });
+});
+
+test('widget.get-image with an unknown key replies with success:false', async () => {
+  const integration = fakeIntegration();
+  attachRawMessageHandlers(integration, {
+    getWidgetContent: () => ({}),
+    getWidgetImage: (imageKey) => {
+      throw new Error(`Unknown image key: ${imageKey}`);
+    },
+    handleSceneAction: () => ({}),
+  });
+
+  integration.emit({ type: WIDGET_GET_IMAGE, payload: { message_id: 'img-2', image_key: 'bogus' } });
+  await tick();
+
+  assert.deepEqual(integration.sent[0], {
+    type: COMMAND_RESULT,
+    payload: { message_id: 'img-2', success: false, error: 'Unknown image key: bogus' },
+  });
 });

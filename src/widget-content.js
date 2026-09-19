@@ -9,25 +9,32 @@
 // `text` components carry `text` (not `value`), `status` components carry
 // `items` (not `rows`), each `{label, value, icon, color}`.
 //
-// Component budget respected here (per WIDGET_CONTENT_BUDGET in the same
-// branch's server/lib/external-integration/constants.js): max 8 components, 1
-// focal (the card-list), tiles <= 6 (2 used), text <= 2 with <= 1 body (1
-// caption used), status <= 1 (1 used), no buttons in this MVP.
+// Only one FOCAL component is allowed per widget (chart/card-list/image,
+// WIDGET_CONTENT_BUDGET.focal = 1, the second is silently dropped) — so the
+// ISS illustration (an `image` component) and the upcoming-passes list can't
+// both be a card-list/image pair. The illustration wins the focal slot, and
+// the passes move into the (single) `status` component instead, one row per
+// pass followed by the two summary rows (<= 10 rows total, well within the
+// cap). Component budget: 4 components (text, 2 tiles, image, status) plus
+// the tiles pair count as one slot each — max 8, 1 focal, tiles <= 6, text <=
+// 2, status <= 1: all comfortably respected.
 //
-// Dates are sent as ISO strings in a dedicated `date` field, never pre-
-// formatted into a title: the integration does not know the viewer's time
-// zone (Gladys house records carry latitude/longitude, not a time zone), so
-// only the core/front-end can render a date correctly for whoever is looking
-// at the dashboard.
+// Losing `card-list` also loses its dedicated `date` field, the only one the
+// core reformats in the viewer's own locale/time zone — `status` items are
+// plain label/value text the core does not reformat. Without a time zone for
+// the house (Gladys house records carry latitude/longitude only), pass times
+// are shown as UTC, explicitly labeled, rather than guessed as local time.
 //
 // Every label/value a human reads is a `{ en, fr }` multi-language object
 // (section 4: "every text field accepts a plain string or a multi-language
 // object"), never a plain English string: the core picks the viewer's
 // language (`getLocalizedText`), so the integration does not need to know
 // which language it is being viewed in. Plain strings are used only for
-// language-neutral tokens: unit symbols (`min`, `°`) and the card-list
-// title/subtitle (a compass point, a degree number, a duration in minutes).
+// language-neutral tokens: unit symbols, compass points and the UTC-labeled
+// pass times.
 // -----------------------------------------------------------------------------
+
+export const ISS_IMAGE_KEY = 'iss-illustration';
 
 const MAX_LIST_ITEMS = 5;
 const DEFAULT_TTL_SECONDS = 60;
@@ -47,13 +54,26 @@ const TEXT = {
   no: { en: 'No', fr: 'Non' },
   fresh: { en: 'Fresh', fr: 'À jour' },
   stale: { en: 'Stale', fr: 'Périmé' },
+  issAlt: { en: 'The International Space Station orbiting Earth', fr: 'La Station Spatiale Internationale en orbite' },
 };
 
-function passToListItem(pass) {
+function imageComponent() {
+  return { type: 'image', key: ISS_IMAGE_KEY, alt: TEXT.issAlt, fit: 'cover' };
+}
+
+function pad(n) {
+  return String(n).padStart(2, '0');
+}
+
+// UTC only: see the module comment on why a local time cannot be shown.
+function formatPassWhenUtc(date) {
+  return `${pad(date.getUTCDate())}/${pad(date.getUTCMonth() + 1)} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())} UTC`;
+}
+
+function passToStatusItem(pass) {
   return {
-    title: `${pass.direction} · ${Math.round(pass.maxElevationDeg)}°`,
-    subtitle: `${Math.round(pass.durationSeconds / 60)} min`,
-    date: pass.startTime.toISOString(),
+    label: formatPassWhenUtc(pass.startTime),
+    value: `${pass.direction} · ${Math.round(pass.maxElevationDeg)}° · ${Math.round(pass.durationSeconds / 60)}min`,
   };
 }
 
@@ -62,6 +82,7 @@ function emptyContent(ttlSeconds) {
     version: 1,
     ttl_seconds: ttlSeconds,
     components: [
+      imageComponent(),
       {
         type: 'status',
         items: [{ label: TEXT.visibleSoon, value: TEXT.no, color: 'neutral' }],
@@ -93,9 +114,12 @@ export function buildWidgetContent(passes, options = {}) {
   const minutesUntilNext = Math.max(0, Math.round((next.startTime.getTime() - now.getTime()) / 60000));
   const visibleSoon = passes.some((pass) => pass.startTime.getTime() - now.getTime() <= VISIBLE_SOON_WINDOW_MS);
 
-  const statusItems = [
-    { label: TEXT.visibleSoon, value: visibleSoon ? TEXT.yes : TEXT.no, color: visibleSoon ? 'success' : 'neutral' },
-  ];
+  const statusItems = passes.slice(0, MAX_LIST_ITEMS).map(passToStatusItem);
+  statusItems.push({
+    label: TEXT.visibleSoon,
+    value: visibleSoon ? TEXT.yes : TEXT.no,
+    color: visibleSoon ? 'success' : 'neutral',
+  });
   if (options.tleStale !== undefined) {
     statusItems.push({
       label: TEXT.orbitalData,
@@ -111,7 +135,7 @@ export function buildWidgetContent(passes, options = {}) {
       { type: 'text', variant: 'caption', text: TEXT.caption },
       { type: 'value', label: TEXT.nextPass, value: minutesUntilNext, unit: 'min', color: 'primary' },
       { type: 'value', label: TEXT.maxElevation, value: Math.round(next.maxElevationDeg), unit: '°', color: 'primary' },
-      { type: 'card-list', display: 'list', items: passes.slice(0, MAX_LIST_ITEMS).map(passToListItem) },
+      imageComponent(),
       { type: 'status', items: statusItems },
     ],
   };

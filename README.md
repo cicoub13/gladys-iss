@@ -46,10 +46,30 @@ starting from the official
   [`satellite.js`](https://github.com/shashwatak/satellite-js) for orbit
   propagation and [`suncalc`](https://github.com/mourner/suncalc) for the
   sun's position.
-- Publishes an **ISS Passes** dashboard widget (next pass countdown, max
-  elevation, upcoming passes list, tonight's visibility).
+- Publishes an **ISS Passes** dashboard widget: next-pass countdown, max
+  elevation, a static ISS illustration (the widget's one focal component),
+  and the upcoming passes as a compact status list (UTC times, direction,
+  elevation, duration — see the note below on why not a nicer `card-list`).
 - Fires a **`pass_starting`** scene trigger shortly before each visible pass.
 - Answers a **`next_pass`** scene action on demand.
+
+**Why a `status` list instead of a `card-list` for the passes.** The widget
+content budget allows only **one focal component** (`chart` | `card-list` |
+`image`) per widget — declaring both the ISS illustration and a `card-list`
+would silently drop one of them. The illustration keeps the focal slot, and
+the passes move into the (single) `status` component instead. The trade-off:
+`status` items are plain text the core does not reformat, unlike `card-list`'s
+dedicated `date` field (rendered in the viewer's own locale/time zone) — so
+pass times are shown as UTC, explicitly labeled, rather than guessed as local
+time (the integration has no time zone for the house, only latitude/longitude).
+
+**Why a PNG, not an SVG.** The widget `image` component only accepts
+PNG/JPEG/WebP bytes (checked by magic number) — `assets/iss-illustration.svg`
+is the editable vector source, rasterized once to `assets/iss-illustration.png`
+(the file actually served, `rsvg-convert -w 800 -h 450 assets/iss-illustration.svg
+-o assets/iss-illustration.png`) — a static asset, so its `image_key` never
+needs to change (section 6 of the widget spec: the key changes only when the
+bytes do).
 
 ## Project structure
 
@@ -62,9 +82,12 @@ starting from the official
 │  ├─ widget-content.js              # pure: Pass[] -> widget content envelope
 │  ├─ scene-events.js                # pass_starting scheduler
 │  ├─ scene-actions.js               # next_pass action handler
-│  ├─ raw-messages.js                # the 4 WS messages not yet in the SDK
+│  ├─ raw-messages.js                # the WS messages not yet wrapped by the SDK
 │  ├─ message-types.js               # their type strings, isolated + sourced
 │  └─ config.js                      # config defaults + coercion
+├─ assets/
+│  ├─ iss-illustration.svg           # editable vector source
+│  └─ iss-illustration.png           # rasterized, the one actually served
 ├─ gladys-assistant-integration.json # manifest (provider type, widgets, scenes)
 ├─ Dockerfile                        # Node 22 Alpine, read-only rootfs ready
 ├─ .github/workflows/                # CI + multi-arch build + UI-driven release
