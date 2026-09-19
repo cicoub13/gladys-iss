@@ -1,0 +1,32 @@
+{
+  "name": "gladys-iss",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Predicts visible ISS passes over your house and can trigger a Gladys scene when one starts (external integration).",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "node --test test/*.test.js",
+    "coverage": "node --test --experimental-test-coverage --test-coverage-lines=95 --test-coverage-branches=90 --test-coverage-functions=85 test/*.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@gladysassistant/integration-sdk": "^0.13.0",
+    "satellite.js": "^5.0.0",
+    "suncalc": "^1.9.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^9.1.0",
+    "globals": "^15.0.0",
+    "prettier": "^3.3.0"
+  },
+  "license": "Apache-2.0"
+}

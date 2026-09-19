@@ -1,0 +1,140 @@
+{
+  "manifest_version": 1,
+  "type": "provider",
+  "name": "ISS Overhead",
+  "description": {
+    "en": "Predicts visible ISS passes over your house and can trigger a scene when one starts.",
+    "fr": "Prédit les passages visibles de l'ISS au-dessus de votre maison et peut déclencher une scène quand l'un commence."
+  },
+  "version": "0.1.0",
+  "docker_image": "ghcr.io/cicoub13/gladys-iss:0.1.0",
+  "gladys_version": ">=4.90.0",
+  "location": true,
+  "config_schema": [
+    {
+      "key": "min_elevation_deg",
+      "type": "number",
+      "label": {
+        "en": "Minimum elevation (°)",
+        "fr": "Élévation minimale (°)"
+      },
+      "description": {
+        "en": "Passes rising below this elevation angle are ignored.",
+        "fr": "Les passages ne dépassant pas cette élévation sont ignorés."
+      },
+      "required": false,
+      "default": 10,
+      "min": 0,
+      "max": 90
+    },
+    {
+      "key": "lookahead_days",
+      "type": "select",
+      "label": {
+        "en": "Prediction window",
+        "fr": "Fenêtre de prédiction"
+      },
+      "description": {
+        "en": "How many days ahead to predict passes for.",
+        "fr": "Nombre de jours à l'avance pour lesquels prédire les passages."
+      },
+      "required": false,
+      "default": "5",
+      "options": [
+        {
+          "value": "3",
+          "label": {
+            "en": "3 days",
+            "fr": "3 jours"
+          }
+        },
+        {
+          "value": "5",
+          "label": {
+            "en": "5 days",
+            "fr": "5 jours"
+          }
+        },
+        {
+          "value": "7",
+          "label": {
+            "en": "7 days",
+            "fr": "7 jours"
+          }
+        }
+      ]
+    }
+  ],
+  "widgets": [
+    {
+      "key": "iss_passes",
+      "label": {
+        "en": "ISS Passes",
+        "fr": "Passages ISS"
+      },
+      "description": {
+        "en": "Upcoming visible ISS passes over your house.",
+        "fr": "Prochains passages visibles de l'ISS au-dessus de votre maison."
+      },
+      "icon": "globe"
+    }
+  ],
+  "scene_triggers": [
+    {
+      "key": "pass_starting",
+      "label": {
+        "en": "ISS pass starting",
+        "fr": "Passage ISS en cours de démarrage"
+      },
+      "description": {
+        "en": "Fires shortly before a visible ISS pass starts.",
+        "fr": "Se déclenche peu avant le début d'un passage visible de l'ISS."
+      },
+      "fields": [
+        {
+          "key": "direction",
+          "type": "multi_select",
+          "label": {
+            "en": "Rises from",
+            "fr": "Se lève depuis"
+          },
+          "required": false,
+          "options": [
+            { "value": "N", "label": { "en": "N", "fr": "N" } },
+            { "value": "NE", "label": { "en": "NE", "fr": "NE" } },
+            { "value": "E", "label": { "en": "E", "fr": "E" } },
+            { "value": "SE", "label": { "en": "SE", "fr": "SE" } },
+            { "value": "S", "label": { "en": "S", "fr": "S" } },
+            { "value": "SW", "label": { "en": "SW", "fr": "SO" } },
+            { "value": "W", "label": { "en": "W", "fr": "O" } },
+            { "value": "NW", "label": { "en": "NW", "fr": "NO" } }
+          ]
+        }
+      ],
+      "variables": [
+        { "key": "start_time", "type": "string", "label": { "en": "Start time", "fr": "Heure de début" } },
+        { "key": "max_elevation_deg", "type": "number", "label": { "en": "Max elevation", "fr": "Élévation max" } },
+        { "key": "duration_seconds", "type": "number", "label": { "en": "Duration", "fr": "Durée" } },
+        { "key": "direction", "type": "string", "label": { "en": "Direction", "fr": "Direction" } }
+      ]
+    }
+  ],
+  "scene_actions": [
+    {
+      "key": "next_pass",
+      "label": {
+        "en": "Get next ISS pass",
+        "fr": "Obtenir le prochain passage ISS"
+      },
+      "timeout_seconds": 10,
+      "outputs": [
+        { "key": "found", "type": "boolean", "label": { "en": "A pass was found", "fr": "Un passage a été trouvé" } },
+        { "key": "start_time", "type": "string", "label": { "en": "Start time", "fr": "Heure de début" } },
+        { "key": "minutes_until", "type": "number", "label": { "en": "Minutes until", "fr": "Minutes restantes" } },
+        { "key": "max_elevation_deg", "type": "number", "label": { "en": "Max elevation", "fr": "Élévation max" } },
+        { "key": "duration_seconds", "type": "number", "label": { "en": "Duration", "fr": "Durée" } },
+        { "key": "direction", "type": "string", "label": { "en": "Direction", "fr": "Direction" } }
+      ]
+    }
+  ]
+}

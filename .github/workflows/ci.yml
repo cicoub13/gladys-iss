@@ -1,0 +1,65 @@
+# -----------------------------------------------------------------------------
+# Continuous integration: runs on every push and every pull request.
+#
+# Three gates, the same ones every developer inspired by this template should
+# keep:
+#   1. Prettier  -> consistent formatting (no style debates in reviews);
+#   2. ESLint    -> catch real mistakes (undefined vars, dead code, ...);
+#   3. Tests     -> `node --test`, the built-in runner (no extra dependency),
+#                   with coverage thresholds so a regression cannot slip in;
+#   4. npm audit -> production dependencies only.
+#
+# Runs across the whole range `engines` declares (Node 20 to 22) — the image
+# ships Node 22, but a contributor on the declared minimum must not discover a
+# breakage the CI never exercised.
+# -----------------------------------------------------------------------------
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    name: Lint & test (Node ${{ matrix.node }})
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check formatting (Prettier)
+        run: npm run format:check
+
+      - name: Lint (ESLint)
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
+
+      # The coverage threshold flags only exist from Node 22.8, so the gate runs
+      # on the version the image actually ships (see the Dockerfile).
+      - name: Enforce coverage thresholds
+        if: matrix.node == 22
+        run: npm run coverage
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
