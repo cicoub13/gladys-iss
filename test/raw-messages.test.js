@@ -34,7 +34,7 @@ test('widget.get replies with the widget content, acked by message_id', async ()
   assert.equal(integration.sent.length, 1);
   assert.deepEqual(integration.sent[0], {
     type: COMMAND_RESULT,
-    payload: { message_id: 'abc', success: true, data: content },
+    payload: { message_id: 'abc', success: true, data: { content } },
   });
 });
 
@@ -55,7 +55,7 @@ test('scene-action.run forwards the key and fields, and replies with the outputs
   assert.deepEqual(received, { key: 'next_pass', fields: {} });
   assert.deepEqual(integration.sent[0], {
     type: COMMAND_RESULT,
-    payload: { message_id: '42', success: true, data: { found: true } },
+    payload: { message_id: '42', success: true, data: { outputs: { found: true } } },
   });
 });
 

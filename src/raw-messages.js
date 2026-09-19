@@ -14,6 +14,11 @@
 // every reconnection, so the caller must call `attachRawMessageHandlers`
 // again from an `integration.on('connected', ...)` handler, not just once at
 // startup.
+//
+// The `{ content }` / `{ outputs }` wrapping below is not a guess: verified
+// against the actual (unmerged, PR #3109/#3110 branches) server code —
+// externalIntegration.getWidgetContent.js reads `result.data.content`,
+// externalIntegration.runSceneAction.js reads `result.data.outputs`.
 // -----------------------------------------------------------------------------
 
 import { WIDGET_GET, WIDGET_GET_IMAGE, WIDGET_ACTION, SCENE_ACTION_RUN, COMMAND_RESULT } from './message-types.js';
@@ -23,8 +28,8 @@ import { WIDGET_GET, WIDGET_GET_IMAGE, WIDGET_ACTION, SCENE_ACTION_RUN, COMMAND_
  * the SDK, on the integration's *current* WebSocket.
  * @param {{ws: {on: Function, send: Function}}} integration - The SDK's GladysIntegration instance (or a test double).
  * @param {object} handlers
- * @param {() => (object|Promise<object>)} handlers.getWidgetContent - Returns the current widget content envelope.
- * @param {(key: string, fields: object) => (object|Promise<object>)} handlers.handleSceneAction - Returns a scene action's outputs, or throws.
+ * @param {() => (object|Promise<object>)} handlers.getWidgetContent - Returns the current widget content envelope (bare, not wrapped in `{ content }`).
+ * @param {(key: string, fields: object) => (object|Promise<object>)} handlers.handleSceneAction - Returns a scene action's outputs (bare, not wrapped in `{ outputs }`), or throws.
  * @param {{error: Function}} [handlers.logger] - Optional logger for handler failures.
  * @returns {void}
  * @example
@@ -45,10 +50,15 @@ export function attachRawMessageHandlers(integration, { getWidgetContent, handle
 
     switch (message.type) {
       case WIDGET_GET:
-        reply(integration, message, getWidgetContent, logger);
+        reply(integration, message, async () => ({ content: await getWidgetContent() }), logger);
         break;
       case SCENE_ACTION_RUN:
-        reply(integration, message, () => handleSceneAction(message.payload?.key, message.payload?.fields), logger);
+        reply(
+          integration,
+          message,
+          async () => ({ outputs: await handleSceneAction(message.payload?.key, message.payload?.fields) }),
+          logger,
+        );
         break;
       case WIDGET_GET_IMAGE:
       case WIDGET_ACTION:

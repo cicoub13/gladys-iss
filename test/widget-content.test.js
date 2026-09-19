@@ -33,7 +33,7 @@ test('buildWidgetContent with no passes returns a single status component, no em
   assert.ok(content.ttl_seconds > 0);
   assert.equal(content.components.length, 1);
   assert.equal(content.components[0].type, 'status');
-  assert.ok(content.components[0].rows.length >= 1);
+  assert.ok(content.components[0].items.length >= 1);
 });
 
 test('buildWidgetContent with passes respects the component budget', () => {
@@ -82,7 +82,7 @@ test('buildWidgetContent flags a pass more than 24h away as not visible soon', (
   const content = buildWidgetContent([farPass], { now });
   const status = content.components.find((component) => component.type === 'status');
 
-  assert.equal(status.rows.find((row) => row.label === 'Visible soon').value, 'No');
+  assert.equal(status.items.find((item) => item.label === 'Visible soon').value, 'No');
 });
 
 test('buildWidgetContent includes the orbital-data row only when tleStale is known', () => {
@@ -90,19 +90,27 @@ test('buildWidgetContent includes the orbital-data row only when tleStale is kno
 
   const withoutInfo = buildWidgetContent([makePass()], { now });
   assert.equal(
-    withoutInfo.components.find((c) => c.type === 'status').rows.find((row) => row.label === 'Orbital data'),
+    withoutInfo.components.find((c) => c.type === 'status').items.find((item) => item.label === 'Orbital data'),
     undefined,
   );
 
   const stale = buildWidgetContent([makePass()], { now, tleStale: true });
   assert.equal(
-    stale.components.find((c) => c.type === 'status').rows.find((row) => row.label === 'Orbital data').value,
+    stale.components.find((c) => c.type === 'status').items.find((item) => item.label === 'Orbital data').value,
     'Stale',
   );
 
   const fresh = buildWidgetContent([makePass()], { now, tleStale: false });
   assert.equal(
-    fresh.components.find((c) => c.type === 'status').rows.find((row) => row.label === 'Orbital data').value,
+    fresh.components.find((c) => c.type === 'status').items.find((item) => item.label === 'Orbital data').value,
     'Fresh',
   );
+});
+
+test('buildWidgetContent puts the caption text under `text`, not `value` (server normalizer field name)', () => {
+  const content = buildWidgetContent([makePass()], { now: new Date('2026-09-20T00:00:00Z') });
+  const caption = content.components.find((component) => component.type === 'text');
+
+  assert.equal(typeof caption.text, 'string');
+  assert.equal(caption.value, undefined);
 });

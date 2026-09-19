@@ -1,15 +1,16 @@
 // -----------------------------------------------------------------------------
 // Pure mapping: Pass[] (from pass-predictor.js) -> the widget content envelope
-// sent back on `external-integration.widget.get`.
+// sent back on `external-integration.widget.get` (wrapped in `{ content }` by
+// raw-messages.js, per the core's expectation).
 //
-// Component field names below (text/value/card-list/status: `variant`, `unit`,
-// `color`, card-list `display`/`items`, status `rows`) follow the vocabulary
-// described in docs/specs/external-integrations/capabilities/dashboard-widgets.md
-// on the (unmerged) PR #3109 branch. That spec is not merged yet and these
-// exact field names are not re-verified against its final text — check them
-// against the live spec before wiring this to a real `widget.get` reply.
+// Component field names below are verified against the actual (unmerged, PR
+// #3109 branch) server-side normalizer,
+// server/lib/external-integration/externalIntegration.normalizeWidgetContent.js:
+// `text` components carry `text` (not `value`), `status` components carry
+// `items` (not `rows`), each `{label, value, icon, color}`.
 //
-// Component budget respected here (per the same spec): max 8 components, 1
+// Component budget respected here (per WIDGET_CONTENT_BUDGET in the same
+// branch's server/lib/external-integration/constants.js): max 8 components, 1
 // focal (the card-list), tiles <= 6 (2 used), text <= 2 with <= 1 body (1
 // caption used), status <= 1 (1 used), no buttons in this MVP.
 //
@@ -43,7 +44,7 @@ function emptyContent(ttlSeconds) {
     components: [
       {
         type: 'status',
-        rows: [{ label: 'Visible soon', value: 'No', color: 'neutral' }],
+        items: [{ label: 'Visible soon', value: 'No', color: 'neutral' }],
       },
     ],
   };
@@ -72,11 +73,11 @@ export function buildWidgetContent(passes, options = {}) {
   const minutesUntilNext = Math.max(0, Math.round((next.startTime.getTime() - now.getTime()) / 60000));
   const visibleSoon = passes.some((pass) => pass.startTime.getTime() - now.getTime() <= VISIBLE_SOON_WINDOW_MS);
 
-  const statusRows = [
+  const statusItems = [
     { label: 'Visible soon', value: visibleSoon ? 'Yes' : 'No', color: visibleSoon ? 'success' : 'neutral' },
   ];
   if (options.tleStale !== undefined) {
-    statusRows.push({
+    statusItems.push({
       label: 'Orbital data',
       value: options.tleStale ? 'Stale' : 'Fresh',
       color: options.tleStale ? 'warning' : 'neutral',
@@ -87,11 +88,11 @@ export function buildWidgetContent(passes, options = {}) {
     version: 1,
     ttl_seconds: ttlSeconds,
     components: [
-      { type: 'text', variant: 'caption', value: 'Upcoming ISS passes' },
+      { type: 'text', variant: 'caption', text: 'Upcoming ISS passes' },
       { type: 'value', label: 'Next pass', value: minutesUntilNext, unit: 'min', color: 'primary' },
       { type: 'value', label: 'Max elevation', value: Math.round(next.maxElevationDeg), unit: '°', color: 'primary' },
       { type: 'card-list', display: 'list', items: passes.slice(0, MAX_LIST_ITEMS).map(passToListItem) },
-      { type: 'status', rows: statusRows },
+      { type: 'status', items: statusItems },
     ],
   };
 }
