@@ -19,6 +19,14 @@
 // zone (Gladys house records carry latitude/longitude, not a time zone), so
 // only the core/front-end can render a date correctly for whoever is looking
 // at the dashboard.
+//
+// Every label/value a human reads is a `{ en, fr }` multi-language object
+// (section 4: "every text field accepts a plain string or a multi-language
+// object"), never a plain English string: the core picks the viewer's
+// language (`getLocalizedText`), so the integration does not need to know
+// which language it is being viewed in. Plain strings are used only for
+// language-neutral tokens: unit symbols (`min`, `°`) and the card-list
+// title/subtitle (a compass point, a degree number, a duration in minutes).
 // -----------------------------------------------------------------------------
 
 const MAX_LIST_ITEMS = 5;
@@ -28,6 +36,18 @@ const DEFAULT_TTL_SECONDS = 60;
 // "visible tonight" is approximated as "a pass starts within the next 24h"
 // rather than the true local calendar evening.
 const VISIBLE_SOON_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+const TEXT = {
+  caption: { en: 'Upcoming ISS passes', fr: 'Prochains passages ISS' },
+  nextPass: { en: 'Next pass', fr: 'Prochain passage' },
+  maxElevation: { en: 'Max elevation', fr: 'Élévation max' },
+  visibleSoon: { en: 'Visible soon', fr: 'Visible bientôt' },
+  orbitalData: { en: 'Orbital data', fr: 'Données orbitales' },
+  yes: { en: 'Yes', fr: 'Oui' },
+  no: { en: 'No', fr: 'Non' },
+  fresh: { en: 'Fresh', fr: 'À jour' },
+  stale: { en: 'Stale', fr: 'Périmé' },
+};
 
 function passToListItem(pass) {
   return {
@@ -44,7 +64,7 @@ function emptyContent(ttlSeconds) {
     components: [
       {
         type: 'status',
-        items: [{ label: 'Visible soon', value: 'No', color: 'neutral' }],
+        items: [{ label: TEXT.visibleSoon, value: TEXT.no, color: 'neutral' }],
       },
     ],
   };
@@ -74,12 +94,12 @@ export function buildWidgetContent(passes, options = {}) {
   const visibleSoon = passes.some((pass) => pass.startTime.getTime() - now.getTime() <= VISIBLE_SOON_WINDOW_MS);
 
   const statusItems = [
-    { label: 'Visible soon', value: visibleSoon ? 'Yes' : 'No', color: visibleSoon ? 'success' : 'neutral' },
+    { label: TEXT.visibleSoon, value: visibleSoon ? TEXT.yes : TEXT.no, color: visibleSoon ? 'success' : 'neutral' },
   ];
   if (options.tleStale !== undefined) {
     statusItems.push({
-      label: 'Orbital data',
-      value: options.tleStale ? 'Stale' : 'Fresh',
+      label: TEXT.orbitalData,
+      value: options.tleStale ? TEXT.stale : TEXT.fresh,
       color: options.tleStale ? 'warning' : 'neutral',
     });
   }
@@ -88,9 +108,9 @@ export function buildWidgetContent(passes, options = {}) {
     version: 1,
     ttl_seconds: ttlSeconds,
     components: [
-      { type: 'text', variant: 'caption', text: 'Upcoming ISS passes' },
-      { type: 'value', label: 'Next pass', value: minutesUntilNext, unit: 'min', color: 'primary' },
-      { type: 'value', label: 'Max elevation', value: Math.round(next.maxElevationDeg), unit: '°', color: 'primary' },
+      { type: 'text', variant: 'caption', text: TEXT.caption },
+      { type: 'value', label: TEXT.nextPass, value: minutesUntilNext, unit: 'min', color: 'primary' },
+      { type: 'value', label: TEXT.maxElevation, value: Math.round(next.maxElevationDeg), unit: '°', color: 'primary' },
       { type: 'card-list', display: 'list', items: passes.slice(0, MAX_LIST_ITEMS).map(passToListItem) },
       { type: 'status', items: statusItems },
     ],

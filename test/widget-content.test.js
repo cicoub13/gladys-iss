@@ -61,7 +61,7 @@ test('buildWidgetContent truncates the card-list to 5 items', () => {
 test('buildWidgetContent computes minutes-until-next from the given `now`', () => {
   const now = new Date('2026-09-20T19:50:00Z');
   const content = buildWidgetContent([makePass()], { now });
-  const nextPassTile = content.components.find((c) => c.type === 'value' && c.label === 'Next pass');
+  const nextPassTile = content.components.find((c) => c.type === 'value' && c.label.en === 'Next pass');
 
   assert.equal(nextPassTile.value, 10);
   assert.equal(nextPassTile.unit, 'min');
@@ -71,7 +71,7 @@ test('buildWidgetContent never returns a negative minutes-until value', () => {
   // `now` is already past the pass start (can happen between two recomputes).
   const now = new Date('2026-09-20T20:10:00Z');
   const content = buildWidgetContent([makePass()], { now });
-  const nextPassTile = content.components.find((c) => c.type === 'value' && c.label === 'Next pass');
+  const nextPassTile = content.components.find((c) => c.type === 'value' && c.label.en === 'Next pass');
 
   assert.equal(nextPassTile.value, 0);
 });
@@ -82,7 +82,7 @@ test('buildWidgetContent flags a pass more than 24h away as not visible soon', (
   const content = buildWidgetContent([farPass], { now });
   const status = content.components.find((component) => component.type === 'status');
 
-  assert.equal(status.items.find((item) => item.label === 'Visible soon').value, 'No');
+  assert.deepEqual(status.items.find((item) => item.label.en === 'Visible soon').value, { en: 'No', fr: 'Non' });
 });
 
 test('buildWidgetContent includes the orbital-data row only when tleStale is known', () => {
@@ -90,20 +90,20 @@ test('buildWidgetContent includes the orbital-data row only when tleStale is kno
 
   const withoutInfo = buildWidgetContent([makePass()], { now });
   assert.equal(
-    withoutInfo.components.find((c) => c.type === 'status').items.find((item) => item.label === 'Orbital data'),
+    withoutInfo.components.find((c) => c.type === 'status').items.find((item) => item.label.en === 'Orbital data'),
     undefined,
   );
 
   const stale = buildWidgetContent([makePass()], { now, tleStale: true });
-  assert.equal(
-    stale.components.find((c) => c.type === 'status').items.find((item) => item.label === 'Orbital data').value,
-    'Stale',
+  assert.deepEqual(
+    stale.components.find((c) => c.type === 'status').items.find((item) => item.label.en === 'Orbital data').value,
+    { en: 'Stale', fr: 'Périmé' },
   );
 
   const fresh = buildWidgetContent([makePass()], { now, tleStale: false });
-  assert.equal(
-    fresh.components.find((c) => c.type === 'status').items.find((item) => item.label === 'Orbital data').value,
-    'Fresh',
+  assert.deepEqual(
+    fresh.components.find((c) => c.type === 'status').items.find((item) => item.label.en === 'Orbital data').value,
+    { en: 'Fresh', fr: 'À jour' },
   );
 });
 
@@ -111,6 +111,26 @@ test('buildWidgetContent puts the caption text under `text`, not `value` (server
   const content = buildWidgetContent([makePass()], { now: new Date('2026-09-20T00:00:00Z') });
   const caption = content.components.find((component) => component.type === 'text');
 
-  assert.equal(typeof caption.text, 'string');
+  assert.equal(caption.text.en, 'Upcoming ISS passes');
+  assert.ok(caption.text.fr);
   assert.equal(caption.value, undefined);
+});
+
+test('every label/value a human reads is a multi-language object, per the widget spec', () => {
+  const content = buildWidgetContent([makePass()], { now: new Date('2026-09-20T00:00:00Z'), tleStale: false });
+
+  for (const component of content.components) {
+    if (component.type === 'text') {
+      assert.ok(component.text.en && component.text.fr);
+    }
+    if (component.type === 'value') {
+      assert.ok(component.label.en && component.label.fr);
+    }
+    if (component.type === 'status') {
+      for (const item of component.items) {
+        assert.ok(item.label.en && item.label.fr);
+        assert.ok(item.value.en && item.value.fr);
+      }
+    }
+  }
 });
