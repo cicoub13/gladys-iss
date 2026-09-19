@@ -6,8 +6,10 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
 import { DEFAULT_CONFIG } from '../src/config.js';
+
+const MAX_COVER_BYTES = 150 * 1024;
 
 const readJson = (name) => JSON.parse(readFileSync(new URL(`../${name}`, import.meta.url), 'utf8'));
 
@@ -62,6 +64,12 @@ test('the scene trigger direction options are exactly the 8 compass points the c
     directionField.options.map((option) => option.value),
     ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
   );
+});
+
+test('the cover image points at a real, appropriately sized file in the repo', () => {
+  assert.ok(manifest.cover_image.endsWith('/cover.jpg'));
+  const size = statSync(new URL('../cover.jpg', import.meta.url)).size;
+  assert.ok(size <= MAX_COVER_BYTES, `cover.jpg is ${size} bytes, over the ${MAX_COVER_BYTES}-byte store limit`);
 });
 
 test('the next_pass scene action declares the exact keys buildNextPassOutput can return', () => {

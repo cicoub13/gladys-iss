@@ -93,7 +93,7 @@ bytes do).
 ├─ .github/workflows/                # CI + multi-arch build + UI-driven release
 ├─ test/                             # unit tests (node --test)
 ├─ fixtures/                         # known TLE + reference data for tests
-└─ cover.png                         # catalog cover (add before publishing)
+└─ cover.jpg                         # catalog cover, 800×534px, ≤150KB
 ```
 
 ## Develop locally
@@ -133,9 +133,8 @@ Not yet — publishing only makes sense once the target capabilities are merged
 and released. When that happens:
 
 1. Bump `gladys_version` in the manifest to the release that ships them.
-2. Replace `cover.png` with a real 800×534px (≤150KB) cover image.
-3. Push this repo to GitHub, add the topic `gladys-assistant-integration`.
-4. **Actions → Release → Run workflow** (`patch` / `minor` / `major`).
+2. Push this repo to GitHub, add the topic `gladys-assistant-integration`.
+3. **Actions → Release → Run workflow** (`patch` / `minor` / `major`).
 
 ## License
 
