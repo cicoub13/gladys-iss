@@ -8,6 +8,9 @@
 // as scalars (string/number), not nullable.
 // -----------------------------------------------------------------------------
 
+// The action these outputs answer, as declared in the manifest `scene_actions`.
+export const SCENE_ACTION_KEY = 'next_pass';
+
 /**
  * Build the outputs for the `next_pass` scene action.
  * @param {import('./pass-predictor.js').Pass[]} passes - Chronologically ordered, possibly stale, cached passes.

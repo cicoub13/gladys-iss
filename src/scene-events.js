@@ -1,7 +1,10 @@
 // -----------------------------------------------------------------------------
-// `pass_starting` scene trigger: scheduling, and the event payload sent to
-// `POST /api/integration/v1/scene/event`.
+// `pass_starting` scene trigger: scheduling, and the event payload handed to
+// the SDK's `publishSceneEvent`.
 // -----------------------------------------------------------------------------
+
+// The trigger this event fires, as declared in the manifest `scene_triggers`.
+export const SCENE_TRIGGER_KEY = 'pass_starting';
 
 // A little time to actually step outside once the trigger fires.
 export const DEFAULT_LEAD_TIME_MS = 90 * 1000;

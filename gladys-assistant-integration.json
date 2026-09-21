@@ -8,7 +8,7 @@
   },
   "version": "0.1.4",
   "docker_image": "ghcr.io/cicoub13/gladys-iss:0.1.4",
-  "gladys_version": ">=4.90.0",
+  "gladys_version": ">=5.1.0",
   "cover_image": "https://raw.githubusercontent.com/cicoub13/gladys-iss/main/cover.jpg",
   "location": true,
   "config_schema": [

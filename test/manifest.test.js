@@ -7,9 +7,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, statSync } from 'node:fs';
+import { validateWidgetImage } from '@gladysassistant/integration-sdk';
 import { DEFAULT_CONFIG } from '../src/config.js';
+import { WIDGET_KEY } from '../src/widget-content.js';
+import { SCENE_ACTION_KEY } from '../src/scene-actions.js';
+import { SCENE_TRIGGER_KEY } from '../src/scene-events.js';
 
 const MAX_COVER_BYTES = 150 * 1024;
+// The Gladys release that ships the provider type, the dashboard widgets and
+// the scene triggers/actions this integration is made of: v5.0.4's manifest
+// schema still had none of them.
+const MIN_GLADYS_VERSION = '>=5.1.0';
 
 const readJson = (name) => JSON.parse(readFileSync(new URL(`../${name}`, import.meta.url), 'utf8'));
 
@@ -31,6 +39,27 @@ test('the manifest is a provider integration that declares location and at least
     (manifest.widgets?.length ?? 0) > 0 ||
       (manifest.scene_triggers?.length ?? 0) > 0 ||
       (manifest.scene_actions?.length ?? 0) > 0,
+  );
+});
+
+test('the manifest requires the Gladys release that ships these capabilities', () => {
+  assert.equal(manifest.gladys_version, MIN_GLADYS_VERSION);
+});
+
+test('the widget, trigger and action keys the code registers are the ones the manifest declares', () => {
+  // The SDK routes every widget.get / scene-action.run by key: a key declared
+  // here but registered under another name reaches no handler at all.
+  assert.deepEqual(
+    manifest.widgets.map((widget) => widget.key),
+    [WIDGET_KEY],
+  );
+  assert.deepEqual(
+    manifest.scene_triggers.map((trigger) => trigger.key),
+    [SCENE_TRIGGER_KEY],
+  );
+  assert.deepEqual(
+    manifest.scene_actions.map((action) => action.key),
+    [SCENE_ACTION_KEY],
   );
 });
 
@@ -79,4 +108,19 @@ test('the next_pass scene action declares the exact keys buildNextPassOutput can
     declaredKeys,
     ['direction', 'duration_seconds', 'found', 'max_elevation_deg', 'minutes_until', 'start_time'].sort(),
   );
+});
+
+test('the widget image asset is one the core will serve, not refuse', () => {
+  // The core validates and REFUSES (it never recompresses): a PNG/JPEG/WebP of
+  // at most 300 KB decoded and 4096x4096 px. validateWidgetImage is the SDK's
+  // copy of that check, run here on the bytes actually shipped in the image.
+  const bytes = readFileSync(new URL('../assets/iss-photo.jpg', import.meta.url));
+  assert.deepEqual(validateWidgetImage(bytes.toString('base64')), []);
+});
+
+test('the Dockerfile ships the widget image asset the code reads at runtime', () => {
+  // A missing asset only surfaces when a dashboard first shows the card, long
+  // after the build that dropped it.
+  const dockerfile = readFileSync(new URL('../Dockerfile', import.meta.url), 'utf8');
+  assert.match(dockerfile, /COPY assets\/iss-photo\.jpg/);
 });
