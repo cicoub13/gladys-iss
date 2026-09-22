@@ -18,6 +18,24 @@ const MAX_COVER_BYTES = 150 * 1024;
 // the scene triggers/actions this integration is made of: v5.0.4's manifest
 // schema still had none of them.
 const MIN_GLADYS_VERSION = '>=5.1.0';
+// INTEGRATION_CATALOG_CATEGORIES in the core: the browse categories of the
+// catalog sidebar. The manifest schema deliberately has no enum (an unknown
+// key is dropped with a warning, never a rejection) — so a typo here would
+// silently land the integration in the uncategorized bucket.
+const CATALOG_CATEGORIES = [
+  'climate',
+  'lighting',
+  'energy',
+  'security',
+  'multimedia',
+  'appliances',
+  'environment',
+  'protocols',
+  'network',
+  'notifications',
+  'assistants',
+  'services',
+];
 
 const readJson = (name) => JSON.parse(readFileSync(new URL(`../${name}`, import.meta.url), 'utf8'));
 
@@ -44,6 +62,13 @@ test('the manifest is a provider integration that declares location and at least
 
 test('the manifest requires the Gladys release that ships these capabilities', () => {
   assert.equal(manifest.gladys_version, MIN_GLADYS_VERSION);
+});
+
+test('the catalog categories are declared and come from the core vocabulary', () => {
+  assert.ok(manifest.categories?.length >= 1 && manifest.categories.length <= 3);
+  for (const category of manifest.categories) {
+    assert.ok(CATALOG_CATEGORIES.includes(category), `unknown catalog category: ${category}`);
+  }
 });
 
 test('the widget, trigger and action keys the code registers are the ones the manifest declares', () => {
