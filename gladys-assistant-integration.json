@@ -6,8 +6,8 @@
     "en": "Predicts visible ISS passes over your house and can trigger a scene when one starts.",
     "fr": "Prédit les passages visibles de l'ISS au-dessus de chez vous et peut déclencher une scène."
   },
-  "version": "0.1.4",
-  "docker_image": "ghcr.io/cicoub13/gladys-iss:0.1.4",
+  "version": "0.1.5",
+  "docker_image": "ghcr.io/cicoub13/gladys-iss:0.1.5",
   "gladys_version": ">=5.1.0",
   "cover_image": "https://raw.githubusercontent.com/cicoub13/gladys-iss/main/cover.jpg",
   "location": true,
@@ -101,22 +101,98 @@
           },
           "required": false,
           "options": [
-            { "value": "N", "label": { "en": "N", "fr": "N" } },
-            { "value": "NE", "label": { "en": "NE", "fr": "NE" } },
-            { "value": "E", "label": { "en": "E", "fr": "E" } },
-            { "value": "SE", "label": { "en": "SE", "fr": "SE" } },
-            { "value": "S", "label": { "en": "S", "fr": "S" } },
-            { "value": "SW", "label": { "en": "SW", "fr": "SO" } },
-            { "value": "W", "label": { "en": "W", "fr": "O" } },
-            { "value": "NW", "label": { "en": "NW", "fr": "NO" } }
+            {
+              "value": "N",
+              "label": {
+                "en": "N",
+                "fr": "N"
+              }
+            },
+            {
+              "value": "NE",
+              "label": {
+                "en": "NE",
+                "fr": "NE"
+              }
+            },
+            {
+              "value": "E",
+              "label": {
+                "en": "E",
+                "fr": "E"
+              }
+            },
+            {
+              "value": "SE",
+              "label": {
+                "en": "SE",
+                "fr": "SE"
+              }
+            },
+            {
+              "value": "S",
+              "label": {
+                "en": "S",
+                "fr": "S"
+              }
+            },
+            {
+              "value": "SW",
+              "label": {
+                "en": "SW",
+                "fr": "SO"
+              }
+            },
+            {
+              "value": "W",
+              "label": {
+                "en": "W",
+                "fr": "O"
+              }
+            },
+            {
+              "value": "NW",
+              "label": {
+                "en": "NW",
+                "fr": "NO"
+              }
+            }
           ]
         }
       ],
       "variables": [
-        { "key": "start_time", "type": "string", "label": { "en": "Start time", "fr": "Heure de début" } },
-        { "key": "max_elevation_deg", "type": "number", "label": { "en": "Max elevation", "fr": "Élévation max" } },
-        { "key": "duration_seconds", "type": "number", "label": { "en": "Duration", "fr": "Durée" } },
-        { "key": "direction", "type": "string", "label": { "en": "Direction", "fr": "Direction" } }
+        {
+          "key": "start_time",
+          "type": "string",
+          "label": {
+            "en": "Start time",
+            "fr": "Heure de début"
+          }
+        },
+        {
+          "key": "max_elevation_deg",
+          "type": "number",
+          "label": {
+            "en": "Max elevation",
+            "fr": "Élévation max"
+          }
+        },
+        {
+          "key": "duration_seconds",
+          "type": "number",
+          "label": {
+            "en": "Duration",
+            "fr": "Durée"
+          }
+        },
+        {
+          "key": "direction",
+          "type": "string",
+          "label": {
+            "en": "Direction",
+            "fr": "Direction"
+          }
+        }
       ]
     }
   ],
@@ -129,12 +205,54 @@
       },
       "timeout_seconds": 10,
       "outputs": [
-        { "key": "found", "type": "boolean", "label": { "en": "A pass was found", "fr": "Un passage a été trouvé" } },
-        { "key": "start_time", "type": "string", "label": { "en": "Start time", "fr": "Heure de début" } },
-        { "key": "minutes_until", "type": "number", "label": { "en": "Minutes until", "fr": "Minutes restantes" } },
-        { "key": "max_elevation_deg", "type": "number", "label": { "en": "Max elevation", "fr": "Élévation max" } },
-        { "key": "duration_seconds", "type": "number", "label": { "en": "Duration", "fr": "Durée" } },
-        { "key": "direction", "type": "string", "label": { "en": "Direction", "fr": "Direction" } }
+        {
+          "key": "found",
+          "type": "boolean",
+          "label": {
+            "en": "A pass was found",
+            "fr": "Un passage a été trouvé"
+          }
+        },
+        {
+          "key": "start_time",
+          "type": "string",
+          "label": {
+            "en": "Start time",
+            "fr": "Heure de début"
+          }
+        },
+        {
+          "key": "minutes_until",
+          "type": "number",
+          "label": {
+            "en": "Minutes until",
+            "fr": "Minutes restantes"
+          }
+        },
+        {
+          "key": "max_elevation_deg",
+          "type": "number",
+          "label": {
+            "en": "Max elevation",
+            "fr": "Élévation max"
+          }
+        },
+        {
+          "key": "duration_seconds",
+          "type": "number",
+          "label": {
+            "en": "Duration",
+            "fr": "Durée"
+          }
+        },
+        {
+          "key": "direction",
+          "type": "string",
+          "label": {
+            "en": "Direction",
+            "fr": "Direction"
+          }
+        }
       ]
     }
   ]
