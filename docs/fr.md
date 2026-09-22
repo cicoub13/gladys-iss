@@ -1,10 +1,9 @@
 # ISS Overhead
 
-> **Intégration en avant-première.** Cette intégration s'appuie sur des
-> capacités Gladys (widgets de dashboard, déclencheurs/actions de scène
-> déclarés par une intégration externe) qui ne sont pas encore publiées. Elle
-> ne peut pas être installée sur une version publiée de Gladys tant qu'elles
-> ne sont pas disponibles.
+> **Nécessite Gladys 5.1 ou supérieur.** Le widget de dashboard et le
+> déclencheur/action de scène dont cette intégration est faite sont livrés
+> avec Gladys 5.1 ; sur une version antérieure, elle ne peut pas être
+> installée.
 
 Prédit les prochains passages visibles de la Station Spatiale Internationale
 au-dessus de votre maison, les affiche sur un widget de dashboard, et peut
@@ -15,8 +14,8 @@ automatisation "va voir dehors".
 
 Le widget **Passages ISS** affiche :
 
-- dans combien de temps aura lieu le prochain passage, et son élévation
-  maximale ;
+- une photo de la station, et dans combien de temps aura lieu le prochain
+  passage, avec son élévation maximale ;
 - les prochains passages, avec leur heure, leur durée et la direction depuis
   laquelle l'ISS se lève ;
 - si l'ISS est visible ce soir, et si les données orbitales utilisées pour le

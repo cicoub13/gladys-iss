@@ -1,9 +1,8 @@
 # ISS Overhead
 
-> **Preview integration.** This integration relies on Gladys capabilities
-> (dashboard widgets, scene triggers/actions declared by an external
-> integration) that are not released yet. It cannot be installed on a
-> released Gladys version until they ship.
+> **Requires Gladys 5.1 or later.** The dashboard widget and the scene
+> trigger/action this integration is made of ship with Gladys 5.1; on an
+> earlier version the integration cannot be installed.
 
 Predicts the next visible passes of the International Space Station over your
 house, shows them on a dashboard widget, and can trigger a scene right before
@@ -13,7 +12,8 @@ one starts — perfect for "go look outside" automations.
 
 The **ISS Passes** widget displays:
 
-- how long until the next visible pass, and its maximum elevation;
+- a photo of the station, and how long until the next visible pass, with its
+  maximum elevation;
 - the next few passes, with their time, duration and the direction the ISS
   rises from;
 - whether the ISS is visible tonight, and whether the orbital data used to

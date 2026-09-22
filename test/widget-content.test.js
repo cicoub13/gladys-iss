@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { validateWidgetContent } from '@gladysassistant/integration-sdk';
 import { buildWidgetContent, ISS_IMAGE_KEY } from '../src/widget-content.js';
 
 const MAX_COMPONENTS = 8;
@@ -34,7 +35,7 @@ function findMetaItem(items, englishLabel) {
   return items.find((item) => typeof item.label === 'object' && item.label.en === englishLabel);
 }
 
-test('buildWidgetContent with no passes: the illustration plus a single status component', () => {
+test('buildWidgetContent with no passes: the photo plus a single status component', () => {
   const content = buildWidgetContent([], { now: new Date('2026-09-20T00:00:00Z') });
 
   assert.equal(content.version, 1);
@@ -61,7 +62,7 @@ test('buildWidgetContent with passes respects the component budget (image is the
   assert.equal(countByType(content.components, 'card-list'), 0);
 });
 
-test('buildWidgetContent declares the ISS illustration as a cover-fit image with a translated alt text', () => {
+test('buildWidgetContent declares the ISS photo as a cover-fit image with a translated alt text', () => {
   const content = buildWidgetContent([makePass()], { now: new Date('2026-09-20T00:00:00Z') });
   const image = content.components.find((component) => component.type === 'image');
 
@@ -169,4 +170,26 @@ test('every human-facing label/value that is not a pass row is a multi-language 
       }
     }
   }
+});
+
+// The budget/vocabulary assertions above are this repo's reading of the spec;
+// this one is the core's own reading, shipped by the SDK: validateWidgetContent
+// returns what Gladys would refuse, drop or silently alter. Empty means the
+// content reaches the dashboard exactly as built.
+test('every content shape passes the SDK validator with nothing dropped or truncated', () => {
+  const now = new Date('2026-09-20T00:00:00Z');
+  const passes = Array.from({ length: 8 }, (_, index) =>
+    makePass({ startTime: new Date(Date.parse('2026-09-20T20:00:00Z') + index * 90 * 60 * 1000) }),
+  );
+
+  assert.deepEqual(validateWidgetContent(buildWidgetContent([], { now })), []);
+  assert.deepEqual(validateWidgetContent(buildWidgetContent([makePass()], { now })), []);
+  assert.deepEqual(validateWidgetContent(buildWidgetContent(passes, { now, tleStale: false })), []);
+  assert.deepEqual(validateWidgetContent(buildWidgetContent(passes, { now, tleStale: true })), []);
+});
+
+test('the image key is one the core will accept and route back to onWidgetGetImage', () => {
+  // externalIntegration.getWidgetImage 404s a key outside this shape without
+  // ever asking the integration for the bytes.
+  assert.match(ISS_IMAGE_KEY, /^[a-z0-9][a-z0-9-]{0,63}$/);
 });

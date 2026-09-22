@@ -1,23 +1,22 @@
 // -----------------------------------------------------------------------------
 // Pure mapping: Pass[] (from pass-predictor.js) -> the widget content envelope
-// sent back on `external-integration.widget.get` (wrapped in `{ content }` by
-// raw-messages.js, per the core's expectation).
+// the `onWidgetGet` handler resolves (the SDK acks it as `data.content`).
 //
-// Component field names below are verified against the actual (unmerged, PR
-// #3109 branch) server-side normalizer,
-// server/lib/external-integration/externalIntegration.normalizeWidgetContent.js:
+// Component field names are those of the widget-content vocabulary shipped in
+// Gladys 5.1 (docs/specs/external-integrations/capabilities/dashboard-widgets.md,
+// normalized server-side by externalIntegration.normalizeWidgetContent.js):
 // `text` components carry `text` (not `value`), `status` components carry
-// `items` (not `rows`), each `{label, value, icon, color}`.
+// `items` (not `rows`), each `{label, value, icon, color}`. The SDK's own
+// `validateWidgetContent` is the executable check — see widget-content.test.js.
 //
 // Only one FOCAL component is allowed per widget (chart/card-list/image,
 // WIDGET_CONTENT_BUDGET.focal = 1, the second is silently dropped) — so the
-// ISS illustration (an `image` component) and the upcoming-passes list can't
-// both be a card-list/image pair. The illustration wins the focal slot, and
-// the passes move into the (single) `status` component instead, one row per
-// pass followed by the two summary rows (<= 10 rows total, well within the
-// cap). Component budget: 4 components (text, 2 tiles, image, status) plus
-// the tiles pair count as one slot each — max 8, 1 focal, tiles <= 6, text <=
-// 2, status <= 1: all comfortably respected.
+// ISS photo (an `image` component) and the upcoming-passes list can't both be
+// a card-list/image pair. The photo wins the focal slot, and the passes move
+// into the (single) `status` component instead, one row per pass followed by
+// the two summary rows (<= 10 rows total, well within the cap). Component
+// budget: 5 components (text, 2 tiles, image, status) — max 8, 1 focal, tiles
+// <= 6, text <= 2, status <= 1: all comfortably respected.
 //
 // Losing `card-list` also loses its dedicated `date` field, the only one the
 // core reformats in the viewer's own locale/time zone — `status` items are
@@ -29,12 +28,16 @@
 // (section 4: "every text field accepts a plain string or a multi-language
 // object"), never a plain English string: the core picks the viewer's
 // language (`getLocalizedText`), so the integration does not need to know
-// which language it is being viewed in. Plain strings are used only for
+// which language it is being viewed in — `onWidgetGet` receives the requester's
+// `language` too, unused here for that reason. Plain strings are used only for
 // language-neutral tokens: unit symbols, compass points and the UTC-labeled
 // pass times.
 // -----------------------------------------------------------------------------
 
-export const ISS_IMAGE_KEY = 'iss-illustration';
+// The widget this content is built for, as declared in the manifest `widgets`.
+export const WIDGET_KEY = 'iss_passes';
+
+export const ISS_IMAGE_KEY = 'iss-photo';
 
 const MAX_LIST_ITEMS = 5;
 const DEFAULT_TTL_SECONDS = 60;
