@@ -23,7 +23,7 @@
 // -----------------------------------------------------------------------------
 
 import * as satellite from 'satellite.js';
-import SunCalc from 'suncalc';
+import * as SunCalc from 'suncalc';
 
 const DEG2RAD = Math.PI / 180;
 const RAD2DEG = 180 / Math.PI;
@@ -169,7 +169,8 @@ export function findVisiblePasses(tle, observer, window, options = {}) {
     const elevationDeg = lookAngles.elevation * RAD2DEG;
     const azimuthDeg = lookAngles.azimuth * RAD2DEG;
 
-    const sunAltitudeDeg = SunCalc.getPosition(date, observer.latitude, observer.longitude).altitude * RAD2DEG;
+    // suncalc >= 2 already returns degrees (apparent, refraction-corrected).
+    const sunAltitudeDeg = SunCalc.getPosition(date, observer.latitude, observer.longitude).altitude;
     const observerIsDark = sunAltitudeDeg <= minSunAltitudeDeg;
     const satelliteIsSunlit = isSatelliteSunlit(positionEci, sunPositionEci(date));
 
