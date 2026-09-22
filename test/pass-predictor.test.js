@@ -1,7 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { compassFromAzimuth, sunPositionEci, isSatelliteSunlit, findVisiblePasses } from '../src/pass-predictor.js';
+import * as satellite from 'satellite.js';
 import { ISS_TLE, PARIS_OBSERVER } from '../fixtures/tle-samples.js';
+
+const DEG2RAD = Math.PI / 180;
 
 const EARTH_RADIUS_KM = 6371;
 const COMPASS_POINTS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
@@ -90,6 +93,36 @@ test('findVisiblePasses returns chronologically ordered, non-overlapping, well-f
       assert.ok(
         pass.startTime.getTime() >= passes[index - 1].endTime.getTime(),
         'passes must not overlap and must be chronologically ordered',
+      );
+    }
+  }
+});
+
+// Sun altitude seen by the observer, computed WITHOUT suncalc (own Sun model +
+// satellite.js look angles), so a unit or convention change in suncalc cannot
+// slip through: suncalc 2 switched from radians to degrees, and a leftover
+// radians-to-degrees conversion only shows up around twilight.
+function independentSunAltitudeDeg(date, observer) {
+  const sunEcf = satellite.eciToEcf(sunPositionEci(date), satellite.gstime(date));
+  const observerGd = { latitude: observer.latitude * DEG2RAD, longitude: observer.longitude * DEG2RAD, height: 0 };
+  return satellite.ecfToLookAngles(observerGd, sunEcf).elevation / DEG2RAD;
+}
+
+test('findVisiblePasses only keeps instants when the Sun is below minSunAltitudeDeg', () => {
+  const window = { start: new Date(), end: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000), stepSeconds: 10 };
+  // Nautical twilight: a threshold far enough below the horizon that a Sun
+  // altitude off by any unit factor lets twilight passes through.
+  const minSunAltitudeDeg = -12;
+  const passes = findVisiblePasses(ISS_TLE, PARIS_OBSERVER, window, { minElevationDeg: 10, minSunAltitudeDeg });
+
+  // 1° of slack: atmospheric refraction (suncalc returns the apparent altitude)
+  // plus the difference between the two Sun models.
+  for (const pass of passes) {
+    for (const instant of [pass.startTime, pass.endTime]) {
+      const sunAltitudeDeg = independentSunAltitudeDeg(instant, PARIS_OBSERVER);
+      assert.ok(
+        sunAltitudeDeg <= minSunAltitudeDeg + 1,
+        `Sun at ${sunAltitudeDeg.toFixed(1)}° on ${instant.toISOString()}, expected <= ${minSunAltitudeDeg}°`,
       );
     }
   }
