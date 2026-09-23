@@ -8,7 +8,7 @@
 // volume), never the app directory.
 // -----------------------------------------------------------------------------
 
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, rename, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
 export const ISS_NORAD_ID = 25544;
@@ -52,13 +52,13 @@ export class TleSource {
    * @param {object} [deps]
    * @param {string} [deps.cachePath] - Where to persist the last known-good TLE.
    * @param {typeof fetch} [deps.fetchImpl] - Injectable for tests.
-   * @param {{readFile: Function, writeFile: Function, mkdir: Function}} [deps.fs] - Injectable for tests.
+   * @param {{readFile: Function, writeFile: Function, rename: Function, mkdir: Function}} [deps.fs] - Injectable for tests.
    * @param {number} [deps.fetchTimeoutMs] - Deadline of one Celestrak request, injectable for tests.
    */
   constructor({
     cachePath = DEFAULT_CACHE_PATH,
     fetchImpl = fetch,
-    fs = { readFile, writeFile, mkdir },
+    fs = { readFile, writeFile, rename, mkdir },
     fetchTimeoutMs = FETCH_TIMEOUT_MS,
   } = {}) {
     this.cachePath = cachePath;
@@ -100,7 +100,11 @@ export class TleSource {
     this.current = { line1, line2, fetchedAt: new Date().toISOString() };
 
     await this.fs.mkdir(dirname(this.cachePath), { recursive: true });
-    await this.fs.writeFile(this.cachePath, JSON.stringify(this.current), 'utf8');
+    // tmp + rename: a crash mid-write leaves the previous cache intact rather
+    // than a truncated one. Owner-only, like every file under /data.
+    const tmpPath = `${this.cachePath}.tmp`;
+    await this.fs.writeFile(tmpPath, JSON.stringify(this.current), { encoding: 'utf8', mode: 0o600 });
+    await this.fs.rename(tmpPath, this.cachePath);
 
     return this.current;
   }

@@ -20,8 +20,14 @@ function fakeFs(initialFiles = {}) {
       }
       return files.get(path);
     },
-    async writeFile(path, content) {
+    writes: [],
+    async writeFile(path, content, options) {
+      this.writes.push({ path, options });
       files.set(path, content);
+    },
+    async rename(from, to) {
+      files.set(to, files.get(from));
+      files.delete(from);
     },
     async mkdir() {},
   };
@@ -77,6 +83,33 @@ test('TleSource.refresh fetches, parses and persists a fresh TLE', async () => {
   assert.ok(result.line1.startsWith('1 25544U'));
   assert.ok(result.fetchedAt);
   assert.equal(JSON.parse(fs.files.get('/data/tle-cache.json')).line1, result.line1);
+});
+
+test('TleSource.refresh writes the cache atomically (tmp + rename) with mode 0600', async () => {
+  const fs = fakeFs();
+  const source = new TleSource({
+    cachePath: '/data/tle-cache.json',
+    fs,
+    fetchImpl: fakeFetch([{ ok: true, text: async () => SAMPLE_TLE_TEXT }]),
+  });
+
+  await source.refresh();
+
+  assert.equal(fs.writes.length, 1);
+  assert.notEqual(fs.writes[0].path, '/data/tle-cache.json', 'must never write the live cache file in place');
+  assert.equal(fs.writes[0].options.mode, 0o600);
+  assert.equal(fs.files.has(fs.writes[0].path), false, 'the temporary file is renamed away');
+  assert.ok(fs.files.has('/data/tle-cache.json'));
+});
+
+test('TleSource.load treats a truncated cache file as no cache', async () => {
+  const source = new TleSource({
+    cachePath: '/data/tle-cache.json',
+    fs: fakeFs({ '/data/tle-cache.json': '{"line1":"1 25544U 98067A' }),
+  });
+
+  assert.equal(await source.load(), null);
+  assert.equal(source.current, null);
 });
 
 test('TleSource.refresh gives up on a Celestrak request that hangs', async () => {
