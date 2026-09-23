@@ -176,7 +176,9 @@ gladys.handleShutdown(() => {
 
 // --- Startup -----------------------------------------------------------------
 logger.info('Starting the ISS Overhead integration...');
+// connect() only rejects when Gladys refuses the token on the first attempt;
+// the SDK keeps reconnecting afterwards (the refusal can be transient, e.g.
+// Gladys still booting), so stay alive instead of exiting.
 gladys.connect().catch((err) => {
-  logger.error('Initial connection failed', err);
-  process.exit(1);
+  logger.error('Initial connection failed, the SDK keeps retrying', err);
 });
