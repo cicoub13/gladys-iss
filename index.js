@@ -23,7 +23,7 @@ import { findVisiblePasses } from './src/pass-predictor.js';
 import { buildWidgetContent, WIDGET_KEY, ISS_IMAGE_KEY } from './src/widget-content.js';
 import { buildNextPassOutput, SCENE_ACTION_KEY } from './src/scene-actions.js';
 import { PassScheduler, buildPassStartingEventData, SCENE_TRIGGER_KEY } from './src/scene-events.js';
-import { InitRetry } from './src/lifecycle.js';
+import { InitRetry, exitOnUnhandledRejection } from './src/lifecycle.js';
 
 const TLE_REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1000;
 const ISS_IMAGE_PATH = new URL('./assets/iss-photo.jpg', import.meta.url);
@@ -32,6 +32,8 @@ const ISS_IMAGE_PATH = new URL('./assets/iss-photo.jpg', import.meta.url);
 // image_key never needs to either (section 6: "when the bytes change, the key
 // changes" — ours simply never do).
 let issImageBase64 = null;
+
+exitOnUnhandledRejection({ logger });
 
 const gladys = new GladysIntegration();
 const tleSource = new TleSource();

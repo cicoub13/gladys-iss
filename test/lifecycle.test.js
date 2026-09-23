@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { InitRetry } from '../src/lifecycle.js';
+import { EventEmitter } from 'node:events';
+import { InitRetry, exitOnUnhandledRejection } from '../src/lifecycle.js';
 
 // Manual timer queue, so each test decides when a scheduled retry fires.
 function fakeTimers() {
@@ -166,4 +167,22 @@ test('InitRetry.stop cancels the pending retry and prevents new ones', async () 
 
   assert.equal(failures.length, 0);
   assert.equal(timers.pending.size, 0);
+});
+
+test('exitOnUnhandledRejection logs the reason at error level, then exits with code 1', () => {
+  const processRef = new EventEmitter();
+  const logged = [];
+  const exits = [];
+  exitOnUnhandledRejection({
+    logger: { error: (...args) => logged.push(args) },
+    exit: (code) => exits.push(code),
+    processRef,
+  });
+
+  const reason = new Error('boom');
+  processRef.emit('unhandledRejection', reason);
+
+  assert.equal(logged.length, 1);
+  assert.ok(logged[0].includes(reason));
+  assert.deepEqual(exits, [1]);
 });
