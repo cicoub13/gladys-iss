@@ -1,6 +1,6 @@
 {
   "name": "gladys-iss",
-  "version": "0.1.7",
+  "version": "0.2.0",
   "private": true,
   "description": "Predicts visible ISS passes over your house and can trigger a Gladys scene when one starts (external integration).",
   "type": "module",
