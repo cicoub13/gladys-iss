@@ -6,8 +6,8 @@
     "en": "Predicts visible ISS passes over your house and can trigger a scene when one starts.",
     "fr": "Prédit les passages visibles de l'ISS au-dessus de chez vous et peut déclencher une scène."
   },
-  "version": "0.1.6",
-  "docker_image": "ghcr.io/cicoub13/gladys-iss:0.1.6",
+  "version": "0.1.7",
+  "docker_image": "ghcr.io/cicoub13/gladys-iss:0.1.7",
   "gladys_version": ">=5.1.0",
   "cover_image": "https://raw.githubusercontent.com/cicoub13/gladys-iss/main/cover.jpg",
   "categories": ["environment"],
