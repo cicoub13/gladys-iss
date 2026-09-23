@@ -23,6 +23,7 @@ import { findVisiblePasses } from './src/pass-predictor.js';
 import { buildWidgetContent, WIDGET_KEY, ISS_IMAGE_KEY } from './src/widget-content.js';
 import { buildNextPassOutput, SCENE_ACTION_KEY } from './src/scene-actions.js';
 import { PassScheduler, buildPassStartingEventData, SCENE_TRIGGER_KEY } from './src/scene-events.js';
+import { InitRetry, exitOnUnhandledRejection } from './src/lifecycle.js';
 
 const TLE_REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1000;
 const ISS_IMAGE_PATH = new URL('./assets/iss-photo.jpg', import.meta.url);
@@ -31,6 +32,8 @@ const ISS_IMAGE_PATH = new URL('./assets/iss-photo.jpg', import.meta.url);
 // image_key never needs to either (section 6: "when the bytes change, the key
 // changes" — ours simply never do).
 let issImageBase64 = null;
+
+exitOnUnhandledRejection({ logger });
 
 const gladys = new GladysIntegration();
 const tleSource = new TleSource();
@@ -128,48 +131,56 @@ gladys.onConfigUpdated(async (newConfig) => {
 });
 
 // --- Connection lifecycle ----------------------------------------------------
-gladys.on('connected', async () => {
-  try {
-    config = normalizeConfig(await gladys.getConfig());
-    // Coordinates have no update event: re-fetch them on every reconnection.
-    house = await fetchHouse();
-    await ensureTle();
-    recomputePasses();
+async function initialize() {
+  config = normalizeConfig(await gladys.getConfig());
+  // Coordinates have no update event: re-fetch them on every reconnection.
+  house = await fetchHouse();
+  await ensureTle();
+  recomputePasses();
+  await gladys.setConnectionStatus(true);
+}
 
-    if (!refreshTimer) {
-      refreshTimer = setInterval(async () => {
-        try {
-          await ensureTle();
-          recomputePasses();
-        } catch (err) {
-          logger.error('Periodic TLE refresh failed', err);
-        }
-      }, TLE_REFRESH_INTERVAL_MS);
-    }
-
-    await gladys.setConnectionStatus(true);
-  } catch (err) {
-    logger.error('Post-connection initialization failed', err);
-    await gladys
+// A failed initialization (Celestrak down at first boot, house not located
+// yet, transient host API error) is retried with backoff until it succeeds,
+// instead of waiting for the next WebSocket reconnection.
+const initRetry = new InitRetry({
+  run: initialize,
+  onFailure: (err, delayMs) => {
+    logger.error(`Post-connection initialization failed, retrying in ${Math.round(delayMs / 1000)}s`, err);
+    gladys
       .setConnectionStatus(false, {
         en: 'Initialization failed, check the integration logs.',
         fr: "L'initialisation a échoué, consultez les logs de l'intégration.",
       })
       .catch(() => {});
-  }
+  },
 });
+
+gladys.on('connected', () => initRetry.start());
+
+// Armed once, independently of the initialization outcome: a failed first
+// boot must not leave the TLE without its periodic refresh.
+refreshTimer = setInterval(async () => {
+  try {
+    await ensureTle();
+    recomputePasses();
+  } catch (err) {
+    logger.error('Periodic TLE refresh failed', err);
+  }
+}, TLE_REFRESH_INTERVAL_MS);
 
 // --- Graceful shutdown -------------------------------------------------------
 gladys.handleShutdown(() => {
-  if (refreshTimer) {
-    clearInterval(refreshTimer);
-  }
+  clearInterval(refreshTimer);
+  initRetry.stop();
   scheduler.stop();
 });
 
 // --- Startup -----------------------------------------------------------------
 logger.info('Starting the ISS Overhead integration...');
+// connect() only rejects when Gladys refuses the token on the first attempt;
+// the SDK keeps reconnecting afterwards (the refusal can be transient, e.g.
+// Gladys still booting), so stay alive instead of exiting.
 gladys.connect().catch((err) => {
-  logger.error('Initial connection failed', err);
-  process.exit(1);
+  logger.error('Initial connection failed, the SDK keeps retrying', err);
 });

@@ -9,6 +9,19 @@ const DEG2RAD = Math.PI / 180;
 const EARTH_RADIUS_KM = 6371;
 const COMPASS_POINTS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
 
+// Prediction windows are pinned next to the fixture TLE epoch, never
+// `new Date()`: ISS visibility over a given city has multi-day gaps, so a
+// wall-clock window turns "at least one pass" into a test that fails on some
+// dates with no code change (e.g. every run from 2026-09-30 to 2026-10-10).
+const FIXTURE_WINDOW_START = '2026-09-19T00:00:00Z';
+// A 4-day window with no visible pass over Paris for this TLE.
+const FIXTURE_GAP_WINDOW_START = '2026-10-01T00:00:00Z';
+
+function fixtureWindow(startIso) {
+  const start = new Date(startIso);
+  return { start, end: new Date(start.getTime() + 4 * 24 * 60 * 60 * 1000), stepSeconds: 10 };
+}
+
 test('compassFromAzimuth maps every cardinal/intercardinal exactly', () => {
   assert.equal(compassFromAzimuth(0), 'N');
   assert.equal(compassFromAzimuth(45), 'NE');
@@ -70,7 +83,7 @@ test('isSatelliteSunlit is true on the night side but far enough off-axis to cle
 });
 
 test('findVisiblePasses returns chronologically ordered, non-overlapping, well-formed passes', () => {
-  const window = { start: new Date(), end: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000), stepSeconds: 10 };
+  const window = fixtureWindow(FIXTURE_WINDOW_START);
   const passes = findVisiblePasses(ISS_TLE, PARIS_OBSERVER, window, { minElevationDeg: 10 });
 
   assert.ok(Array.isArray(passes));
@@ -109,7 +122,7 @@ function independentSunAltitudeDeg(date, observer) {
 }
 
 test('findVisiblePasses only keeps instants when the Sun is below minSunAltitudeDeg', () => {
-  const window = { start: new Date(), end: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000), stepSeconds: 10 };
+  const window = fixtureWindow(FIXTURE_WINDOW_START);
   // Nautical twilight: a threshold far enough below the horizon that a Sun
   // altitude off by any unit factor lets twilight passes through.
   const minSunAltitudeDeg = -12;
@@ -129,7 +142,7 @@ test('findVisiblePasses only keeps instants when the Sun is below minSunAltitude
 });
 
 test('findVisiblePasses respects a stricter minElevationDeg', () => {
-  const window = { start: new Date(), end: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000), stepSeconds: 10 };
+  const window = fixtureWindow(FIXTURE_WINDOW_START);
   const lenient = findVisiblePasses(ISS_TLE, PARIS_OBSERVER, window, { minElevationDeg: 10 });
   const strict = findVisiblePasses(ISS_TLE, PARIS_OBSERVER, window, { minElevationDeg: 60 });
 
@@ -137,4 +150,12 @@ test('findVisiblePasses respects a stricter minElevationDeg', () => {
   for (const pass of strict) {
     assert.ok(pass.maxElevationDeg >= 60);
   }
+});
+
+test('findVisiblePasses returns an empty list for a window with no visible pass', () => {
+  const passes = findVisiblePasses(ISS_TLE, PARIS_OBSERVER, fixtureWindow(FIXTURE_GAP_WINDOW_START), {
+    minElevationDeg: 10,
+  });
+
+  assert.deepEqual(passes, []);
 });

@@ -8,7 +8,7 @@
 // volume), never the app directory.
 // -----------------------------------------------------------------------------
 
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, rename, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
 export const ISS_NORAD_ID = 25544;
@@ -18,6 +18,10 @@ export const DEFAULT_CACHE_PATH = '/data/tle-cache.json';
 // A TLE is only trustworthy for a few days after its epoch; past this, treat
 // it as stale for display purposes (the widget's "orbital data" status row).
 export const STALE_AFTER_MS = 24 * 60 * 60 * 1000;
+
+// Overall deadline for one Celestrak request (headers AND body): without it a
+// stalled connection holds the startup path for undici's ~5 min defaults.
+export const FETCH_TIMEOUT_MS = 15 * 1000;
 
 /**
  * Parse Celestrak's 3-line TLE text (name line + the two element lines).
@@ -48,12 +52,19 @@ export class TleSource {
    * @param {object} [deps]
    * @param {string} [deps.cachePath] - Where to persist the last known-good TLE.
    * @param {typeof fetch} [deps.fetchImpl] - Injectable for tests.
-   * @param {{readFile: Function, writeFile: Function, mkdir: Function}} [deps.fs] - Injectable for tests.
+   * @param {{readFile: Function, writeFile: Function, rename: Function, mkdir: Function}} [deps.fs] - Injectable for tests.
+   * @param {number} [deps.fetchTimeoutMs] - Deadline of one Celestrak request, injectable for tests.
    */
-  constructor({ cachePath = DEFAULT_CACHE_PATH, fetchImpl = fetch, fs = { readFile, writeFile, mkdir } } = {}) {
+  constructor({
+    cachePath = DEFAULT_CACHE_PATH,
+    fetchImpl = fetch,
+    fs = { readFile, writeFile, rename, mkdir },
+    fetchTimeoutMs = FETCH_TIMEOUT_MS,
+  } = {}) {
     this.cachePath = cachePath;
     this.fetchImpl = fetchImpl;
     this.fs = fs;
+    this.fetchTimeoutMs = fetchTimeoutMs;
     this.current = null;
   }
 
@@ -80,7 +91,8 @@ export class TleSource {
    * await tleSource.refresh();
    */
   async refresh() {
-    const response = await this.fetchImpl(CELESTRAK_TLE_URL);
+    // The same signal also aborts the body read below.
+    const response = await this.fetchImpl(CELESTRAK_TLE_URL, { signal: AbortSignal.timeout(this.fetchTimeoutMs) });
     if (!response.ok) {
       throw new Error(`Celestrak request failed with status ${response.status}`);
     }
@@ -88,7 +100,11 @@ export class TleSource {
     this.current = { line1, line2, fetchedAt: new Date().toISOString() };
 
     await this.fs.mkdir(dirname(this.cachePath), { recursive: true });
-    await this.fs.writeFile(this.cachePath, JSON.stringify(this.current), 'utf8');
+    // tmp + rename: a crash mid-write leaves the previous cache intact rather
+    // than a truncated one. Owner-only, like every file under /data.
+    const tmpPath = `${this.cachePath}.tmp`;
+    await this.fs.writeFile(tmpPath, JSON.stringify(this.current), { encoding: 'utf8', mode: 0o600 });
+    await this.fs.rename(tmpPath, this.cachePath);
 
     return this.current;
   }

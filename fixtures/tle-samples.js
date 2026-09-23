@@ -1,9 +1,10 @@
 // -----------------------------------------------------------------------------
 // A real ISS TLE (fetched from Celestrak on 2026-09-19) for property-based
 // tests of pass-predictor.js. A TLE is only accurate for a few days around its
-// own epoch (2026, day-of-year ~261.79, i.e. 2026-09-18) — tests use `new
-// Date()` as the prediction window start, not a hardcoded instant, so this
-// fixture stays valid as long as it is refreshed every so often.
+// own epoch (2026, day-of-year ~261.79, i.e. 2026-09-18) — tests pin their
+// prediction windows next to that epoch (never `new Date()`), so the results
+// do not depend on the day the suite runs. Refreshing this TLE means moving
+// those pinned windows too.
 // -----------------------------------------------------------------------------
 
 export const ISS_TLE = {
