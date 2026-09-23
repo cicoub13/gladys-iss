@@ -79,6 +79,21 @@ test('TleSource.refresh fetches, parses and persists a fresh TLE', async () => {
   assert.equal(JSON.parse(fs.files.get('/data/tle-cache.json')).line1, result.line1);
 });
 
+test('TleSource.refresh gives up on a Celestrak request that hangs', async () => {
+  const source = new TleSource({
+    cachePath: '/data/tle-cache.json',
+    fs: fakeFs(),
+    fetchTimeoutMs: 20,
+    // Never answers: only settles when the request signal aborts.
+    fetchImpl: (url, { signal } = {}) =>
+      new Promise((resolve, reject) => {
+        signal?.addEventListener('abort', () => reject(signal.reason));
+      }),
+  });
+
+  await assert.rejects(() => source.refresh(), { name: 'TimeoutError' });
+});
+
 test('TleSource.refresh throws on a non-ok HTTP response', async () => {
   const source = new TleSource({
     cachePath: '/data/tle-cache.json',
