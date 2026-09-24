@@ -54,6 +54,18 @@ committed at its served size; `npm test` runs the SDK's `validateWidgetImage`
 on the actual bytes. It is a static asset, so its `image_key` never needs to
 change (section 6 of the widget spec: the key changes only when the bytes do).
 
+## Screenshots
+
+The **ISS Passes** widget on a dashboard, next to the core sun widget:
+
+![The ISS Passes widget on a Gladys dashboard](docs/images/widget.png)
+
+A Gladys scene started by the `pass_starting` trigger, filtered on the direction the ISS rises from:
+
+![A Gladys scene triggered by an ISS pass](docs/images/scene-trigger.png)
+
+_Captured on a Gladys 5.1 dashboard with simulated devices and states — values are illustrative._
+
 ## Project structure
 
 ```
