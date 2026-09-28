@@ -18,29 +18,32 @@ function makePass(startTime, overrides = {}) {
 }
 
 test('buildNextPassOutput returns found:false and nothing else when no pass is upcoming', () => {
-  const output = buildNextPassOutput([], new Date('2026-09-20T00:00:00Z'));
+  const output = buildNextPassOutput([], 'en', new Date('2026-09-20T00:00:00Z'));
   assert.deepEqual(output, { found: false });
 });
 
 test('buildNextPassOutput ignores passes already in the past', () => {
   const now = new Date('2026-09-20T20:10:00Z');
   const past = makePass(new Date('2026-09-20T20:00:00Z'));
-  const output = buildNextPassOutput([past], now);
+  const output = buildNextPassOutput([past], 'en', now);
   assert.deepEqual(output, { found: false });
 });
 
 test('buildNextPassOutput returns the first still-future pass, with minutes_until rounded', () => {
   const now = new Date('2026-09-20T19:45:00Z');
   const upcoming = makePass(new Date('2026-09-20T20:00:00Z'));
-  const output = buildNextPassOutput([upcoming], now);
+  process.env.TZ = 'Europe/Paris';
+  const output = buildNextPassOutput([upcoming], 'fr', now);
 
   assert.deepEqual(output, {
     found: true,
-    start_time: '2026-09-20T20:00:00.000Z',
+    start_date: 'dimanche 20 septembre',
+    start_hour: '22:00',
     minutes_until: 15,
     max_elevation_deg: 42,
     duration_seconds: 300,
     direction: 'NW',
+    direction_name: 'nord-ouest',
   });
 });
 
@@ -48,8 +51,9 @@ test('buildNextPassOutput skips past passes cached alongside future ones', () =>
   const now = new Date('2026-09-20T20:10:00Z');
   const past = makePass(new Date('2026-09-20T20:00:00Z'));
   const future = makePass(new Date('2026-09-21T05:00:00Z'), { direction: 'SE' });
-  const output = buildNextPassOutput([past, future], now);
+  const output = buildNextPassOutput([past, future], 'en', now);
 
   assert.equal(output.found, true);
   assert.equal(output.direction, 'SE');
+  assert.equal(output.direction_name, 'south-east');
 });

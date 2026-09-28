@@ -45,7 +45,7 @@ let passes = [];
 const scheduler = new PassScheduler({
   onTrigger: async (pass) => {
     try {
-      await gladys.publishSceneEvent(SCENE_TRIGGER_KEY, buildPassStartingEventData(pass));
+      await gladys.publishSceneEvent(SCENE_TRIGGER_KEY, buildPassStartingEventData(pass, config.language));
     } catch (err) {
       logger.error(`Failed to fire the ${SCENE_TRIGGER_KEY} scene event`, err);
     }
@@ -55,6 +55,7 @@ const scheduler = new PassScheduler({
 let refreshTimer = null;
 
 function recomputePasses() {
+  scheduler.leadTimeMs = config.lead_time_minutes * 60 * 1000;
   if (!house || !tleSource.current) {
     passes = [];
     scheduler.reschedule(passes);
@@ -114,7 +115,7 @@ gladys.onWidgetGetImage(async (imageKey) => {
   return issImageBase64;
 });
 
-gladys.onSceneAction(SCENE_ACTION_KEY, () => buildNextPassOutput(passes));
+gladys.onSceneAction(SCENE_ACTION_KEY, () => buildNextPassOutput(passes, config.language));
 
 // --- Configuration updated by the user ---------------------------------------
 gladys.onConfigUpdated(async (newConfig) => {

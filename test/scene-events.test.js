@@ -32,13 +32,16 @@ function fakeTimers() {
   };
 }
 
-test('buildPassStartingEventData includes direction, start_time, max_elevation_deg, duration_seconds', () => {
+test('buildPassStartingEventData includes the raw and the localized pass values', () => {
+  process.env.TZ = 'Europe/Paris';
   const pass = makePass(new Date('2026-09-20T20:00:00Z'));
-  const data = buildPassStartingEventData(pass);
+  const data = buildPassStartingEventData(pass, 'fr');
 
   assert.deepEqual(data, {
     direction: 'NW',
-    start_time: '2026-09-20T20:00:00.000Z',
+    direction_name: 'nord-ouest',
+    start_date: 'dimanche 20 septembre',
+    start_hour: '22:00',
     max_elevation_deg: 42,
     duration_seconds: 300,
   });

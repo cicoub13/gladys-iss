@@ -9,10 +9,21 @@ test('normalizeConfig falls back to the defaults when given nothing', () => {
 });
 
 test('normalizeConfig coerces string values from a form', () => {
-  assert.deepEqual(normalizeConfig({ min_elevation_deg: '15', lookahead_days: '7' }), {
-    min_elevation_deg: 15,
-    lookahead_days: 7,
-  });
+  assert.deepEqual(
+    normalizeConfig({ min_elevation_deg: '15', lookahead_days: '7', lead_time_minutes: '10', language: 'fr' }),
+    { min_elevation_deg: 15, lookahead_days: 7, lead_time_minutes: 10, language: 'fr' },
+  );
+});
+
+test('normalizeConfig falls back to the default lead time when unset or outside [0, 60]', () => {
+  for (const lead_time_minutes of [null, '', -1, 61, 'bogus']) {
+    assert.equal(normalizeConfig({ lead_time_minutes }).lead_time_minutes, DEFAULT_CONFIG.lead_time_minutes);
+  }
+  assert.equal(normalizeConfig({ lead_time_minutes: 0 }).lead_time_minutes, 0);
+});
+
+test('normalizeConfig snaps an unknown language back to the default', () => {
+  assert.equal(normalizeConfig({ language: 'de' }).language, DEFAULT_CONFIG.language);
 });
 
 test('normalizeConfig rejects a min_elevation_deg outside [0, 90]', () => {

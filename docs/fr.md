@@ -36,12 +36,23 @@ brillante et rapide dans le ciel du soir ou du petit matin.
   passage prédit à la demande, pour une scène qui veut l'annoncer (message
   vocal, par exemple) plutôt que réagir à son démarrage.
 
+Les deux exposent le passage sous forme de variables. Pour un message,
+préférez celles prêtes à lire, écrites dans la **Langue des scènes** de la
+configuration et à l'heure locale : `start_date` (ex. « lundi 28 septembre »),
+`start_hour` (ex. « 19:49 ») et `direction_name` (ex. « ouest »). `direction`
+(code cardinal, ex. « W ») reste disponible pour les scènes qui le comparent. Par exemple « L'ISS passe
+_start_date_ à _start_hour_, direction _direction_name_. » donne « L'ISS passe
+lundi 28 septembre à 19:49, direction ouest. », aussi bien pour une
+notification que pour un message vocal.
+
 ## Configuration
 
-| Clé                   | Défaut  | Description                                                    |
-| --------------------- | ------- | -------------------------------------------------------------- |
-| Élévation minimale    | 10°     | Les passages ne dépassant jamais cette élévation sont ignorés. |
-| Fenêtre de prédiction | 5 jours | Sur combien de jours prédire les passages (3, 5 ou 7).         |
+| Clé                     | Défaut    | Description                                                                                         |
+| ----------------------- | --------- | --------------------------------------------------------------------------------------------------- |
+| Élévation minimale      | 10°       | Les passages ne dépassant jamais cette élévation sont ignorés.                                      |
+| Fenêtre de prédiction   | 5 jours   | Sur combien de jours prédire les passages (3, 5 ou 7).                                              |
+| Anticipation des scènes | 5 minutes | Combien de temps avant un passage le déclencheur « Passage ISS en cours de démarrage » part (≤ 60). |
+| Langue des scènes       | Français  | Langue de la date, de l'heure et de la direction transmises aux scènes.                             |
 
 L'intégration a besoin de la localisation de votre maison, accordée
 automatiquement à l'installation (aucune adresse à saisir).

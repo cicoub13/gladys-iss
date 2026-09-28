@@ -98,6 +98,25 @@ test('the lookahead_days config default matches the one the code falls back to',
   assert.equal(Number(field.default), DEFAULT_CONFIG.lookahead_days);
 });
 
+test('the lead_time_minutes and language config defaults match the ones the code falls back to', () => {
+  const leadTime = manifest.config_schema.find((entry) => entry.key === 'lead_time_minutes');
+  assert.equal(leadTime.default, DEFAULT_CONFIG.lead_time_minutes);
+  const language = manifest.config_schema.find((entry) => entry.key === 'language');
+  assert.equal(language.default, DEFAULT_CONFIG.language);
+});
+
+test('the pass_starting trigger declares the exact variables buildPassStartingEventData sends', () => {
+  const trigger = manifest.scene_triggers.find((entry) => entry.key === 'pass_starting');
+  assert.deepEqual(trigger.variables.map((variable) => variable.key).sort(), [
+    'direction',
+    'direction_name',
+    'duration_seconds',
+    'max_elevation_deg',
+    'start_date',
+    'start_hour',
+  ]);
+});
+
 test('every scene trigger and action field/variable/output is translated (en + fr)', () => {
   const labeledEntries = [
     ...manifest.widgets.flatMap((widget) => [widget, ...(widget.settings ?? [])]),
@@ -131,7 +150,16 @@ test('the next_pass scene action declares the exact keys buildNextPassOutput can
   const declaredKeys = action.outputs.map((output) => output.key).sort();
   assert.deepEqual(
     declaredKeys,
-    ['direction', 'duration_seconds', 'found', 'max_elevation_deg', 'minutes_until', 'start_time'].sort(),
+    [
+      'direction',
+      'direction_name',
+      'duration_seconds',
+      'found',
+      'max_elevation_deg',
+      'minutes_until',
+      'start_date',
+      'start_hour',
+    ].sort(),
   );
 });
 
