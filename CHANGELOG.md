@@ -4,6 +4,8 @@ All notable changes to the ISS Overhead integration for Gladys Assistant.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-28
+
 ### Added
 
 - New scene variables `start_date` (e.g. "lundi 28 septembre") and
