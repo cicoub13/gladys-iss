@@ -34,6 +34,45 @@ const DIRECTION_NAMES = {
   },
 };
 
+// Compact compass points for the widget rows, as the manifest's `direction`
+// filter labels them.
+const DIRECTION_CODES = {
+  en: { N: 'N', NE: 'NE', E: 'E', SE: 'SE', S: 'S', SW: 'SW', W: 'W', NW: 'NW' },
+  fr: { N: 'N', NE: 'NE', E: 'E', SE: 'SE', S: 'S', SW: 'SO', W: 'O', NW: 'NO' },
+};
+
+/**
+ * Snap a requested language to a supported one, English otherwise.
+ * @param {string} [language] - ISO 639-1 code, e.g. from a widget request.
+ * @returns {'en'|'fr'} A supported language.
+ * @example
+ * resolveLanguage('de'); // 'en'
+ */
+export function resolveLanguage(language) {
+  return LANGUAGES.includes(language) ? language : 'en';
+}
+
+/**
+ * Compact, localized pass values for a widget row.
+ * @param {import('./pass-predictor.js').Pass} pass - The pass to describe.
+ * @param {string} [language] - Language of the viewer (unsupported ones fall back to English).
+ * @returns {{when: string, direction: string}} The localized values.
+ * @example
+ * localizeWidgetPass(pass, 'fr'); // { when: '28/09 19:49', direction: 'O' }
+ */
+export function localizeWidgetPass(pass, language) {
+  const resolved = resolveLanguage(language);
+  return {
+    when: pass.startTime.toLocaleString(resolved, {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    }),
+    direction: DIRECTION_CODES[resolved][pass.direction],
+  };
+}
+
 /**
  * Localized, human-readable pass values.
  * @param {import('./pass-predictor.js').Pass} pass - The pass to describe.

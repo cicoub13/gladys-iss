@@ -20,19 +20,19 @@
 //
 // Losing `card-list` also loses its dedicated `date` field, the only one the
 // core reformats in the viewer's own locale/time zone — `status` items are
-// plain label/value text the core does not reformat. Without a time zone for
-// the house (Gladys house records carry latitude/longitude only), pass times
-// are shown as UTC, explicitly labeled, rather than guessed as local time.
+// plain label/value text the core does not reformat. So the pass rows are
+// formatted here (`localizeWidgetPass`): in the local time zone (the `TZ`
+// Gladys injects) and in the requester's `language`, which `onWidgetGet`
+// receives (the core caches the content per language).
 //
-// Every label/value a human reads is a `{ en, fr }` multi-language object
-// (section 4: "every text field accepts a plain string or a multi-language
-// object"), never a plain English string: the core picks the viewer's
-// language (`getLocalizedText`), so the integration does not need to know
-// which language it is being viewed in — `onWidgetGet` receives the requester's
-// `language` too, unused here for that reason. Plain strings are used only for
-// language-neutral tokens: unit symbols, compass points and the UTC-labeled
-// pass times.
+// Every other label/value a human reads is a `{ en, fr }` multi-language
+// object (section 4: "every text field accepts a plain string or a
+// multi-language object"), never a plain English string: the core picks the
+// viewer's language (`getLocalizedText`). Plain strings are used only for
+// language-neutral tokens (unit symbols) and the already-localized pass rows.
 // -----------------------------------------------------------------------------
+
+import { localizeWidgetPass } from './localize.js';
 
 // The widget this content is built for, as declared in the manifest `widgets`.
 export const WIDGET_KEY = 'iss_passes';
@@ -64,19 +64,11 @@ function imageComponent() {
   return { type: 'image', key: ISS_IMAGE_KEY, alt: TEXT.issAlt, fit: 'cover' };
 }
 
-function pad(n) {
-  return String(n).padStart(2, '0');
-}
-
-// UTC only: see the module comment on why a local time cannot be shown.
-function formatPassWhenUtc(date) {
-  return `${pad(date.getUTCDate())}/${pad(date.getUTCMonth() + 1)} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())} UTC`;
-}
-
-function passToStatusItem(pass) {
+function passToStatusItem(pass, language) {
+  const { when, direction } = localizeWidgetPass(pass, language);
   return {
-    label: formatPassWhenUtc(pass.startTime),
-    value: `${pass.direction} · ${Math.round(pass.maxElevationDeg)}° · ${Math.round(pass.durationSeconds / 60)}min`,
+    label: when,
+    value: `${direction} · ${Math.round(pass.maxElevationDeg)}° · ${Math.round(pass.durationSeconds / 60)}min`,
   };
 }
 
@@ -101,6 +93,7 @@ function emptyContent(ttlSeconds) {
  * @param {Date} [options.now] - Reference instant (injectable for tests).
  * @param {number} [options.ttlSeconds] - Envelope TTL, defaults to 60s.
  * @param {boolean} [options.tleStale] - When known, shown as an "orbital data" status row.
+ * @param {string} [options.language] - Language of the viewer, for the pass rows (English when unsupported).
  * @returns {object} The widget content envelope.
  * @example
  * buildWidgetContent(passes, { now: new Date(), tleStale: false });
@@ -117,7 +110,7 @@ export function buildWidgetContent(passes, options = {}) {
   const minutesUntilNext = Math.max(0, Math.round((next.startTime.getTime() - now.getTime()) / 60000));
   const visibleSoon = passes.some((pass) => pass.startTime.getTime() - now.getTime() <= VISIBLE_SOON_WINDOW_MS);
 
-  const statusItems = passes.slice(0, MAX_LIST_ITEMS).map(passToStatusItem);
+  const statusItems = passes.slice(0, MAX_LIST_ITEMS).map((pass) => passToStatusItem(pass, options.language));
   statusItems.push({
     label: TEXT.visibleSoon,
     value: visibleSoon ? TEXT.yes : TEXT.no,

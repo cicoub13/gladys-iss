@@ -29,7 +29,7 @@ function countByType(components, type) {
 }
 
 // Meta status rows ("Visible soon", "Orbital data") carry a { en, fr } label;
-// pass rows carry a plain UTC-formatted string label — this is how the two
+// pass rows carry a plain, already-localized string label — this is how the two
 // kinds are told apart in the flat `items` array.
 function findMetaItem(items, englishLabel) {
   return items.find((item) => typeof item.label === 'object' && item.label.en === englishLabel);
@@ -84,13 +84,17 @@ test('buildWidgetContent truncates the pass rows to 5, keeping the 2 summary row
   assert.equal(findMetaItem(items, 'Orbital data') !== undefined, true);
 });
 
-test('a pass status row shows the UTC time, direction, elevation and duration as plain (language-neutral) strings', () => {
-  const content = buildWidgetContent([makePass()], { now: new Date('2026-09-20T00:00:00Z') });
-  const items = content.components.find((component) => component.type === 'status').items;
-  const passRow = items[0];
+test('a pass status row shows the local time and direction in the viewer language', () => {
+  process.env.TZ = 'Europe/Paris';
+  const passRow = (language) =>
+    buildWidgetContent([makePass()], { now: new Date('2026-09-20T00:00:00Z'), language }).components.find(
+      (component) => component.type === 'status',
+    ).items[0];
 
-  assert.equal(passRow.label, '20/09 20:00 UTC');
-  assert.equal(passRow.value, 'NW · 38° · 5min');
+  assert.deepEqual(passRow('fr'), { label: '20/09 22:00', value: 'NO · 38° · 5min' });
+  assert.deepEqual(passRow('en'), { label: '09/20, 10:00 PM', value: 'NW · 38° · 5min' });
+  // A language the integration does not speak falls back to English.
+  assert.deepEqual(passRow('de'), passRow('en'));
 });
 
 test('buildWidgetContent computes minutes-until-next from the given `now`', () => {

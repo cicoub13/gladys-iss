@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { localizePass } from '../src/localize.js';
+import { localizePass, localizeWidgetPass, resolveLanguage } from '../src/localize.js';
 
 // The container gets `TZ` from Gladys: the values follow it, not UTC.
 process.env.TZ = 'Europe/Paris';
@@ -29,4 +29,15 @@ test('localizePass names every compass point the predictor produces', () => {
       assert.ok(localizePass({ ...pass, direction }, language).direction_name, `${direction} in ${language}`);
     }
   }
+});
+
+test('localizeWidgetPass gives a compact local date-time and compass point per language', () => {
+  assert.deepEqual(localizeWidgetPass(pass, 'fr'), { when: '28/09 19:49', direction: 'O' });
+  assert.deepEqual(localizeWidgetPass(pass, 'en'), { when: '09/28, 07:49 PM', direction: 'W' });
+});
+
+test('resolveLanguage falls back to English for an unsupported or missing language', () => {
+  assert.equal(resolveLanguage('fr'), 'fr');
+  assert.equal(resolveLanguage('de'), 'en');
+  assert.equal(resolveLanguage(undefined), 'en');
 });
