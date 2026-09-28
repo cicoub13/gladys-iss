@@ -34,12 +34,23 @@ early-morning sky.
   for scenes that want to announce it (e.g. a voice message) rather than react
   to it.
 
+Both expose the pass as variables. For a message, prefer the ready-to-read
+ones, written in the **Scene language** of the configuration and in your
+local time: `start_date` (e.g. "Monday, September 28"), `start_hour`
+(e.g. "07:49 PM") and `direction_name` (e.g. "west"). `direction` (compass
+code, e.g. "W") stays available for scenes that compare it. For example "The ISS passes on _start_date_ at _start_hour_,
+rising in the _direction_name_." gives "The ISS passes on Monday, September 28
+at 07:49 PM, rising in the west.", for a notification as well as a voice
+message.
+
 ## Configuration
 
-| Key               | Default | Description                                          |
-| ----------------- | ------- | ---------------------------------------------------- |
-| Minimum elevation | 10°     | Passes that never rise above this angle are ignored. |
-| Prediction window | 5 days  | How far ahead passes are predicted (3, 5 or 7 days). |
+| Key               | Default   | Description                                                                |
+| ----------------- | --------- | -------------------------------------------------------------------------- |
+| Minimum elevation | 10°       | Passes that never rise above this angle are ignored.                       |
+| Prediction window | 5 days    | How far ahead passes are predicted (3, 5 or 7 days).                       |
+| Scene lead time   | 5 minutes | How long before a pass starts the "ISS pass starting" trigger fires (≤60). |
+| Scene language    | French    | Language of the date, time and direction handed to scenes.                 |
 
 The integration needs your house's location, granted automatically when you
 install it (no address to type in).

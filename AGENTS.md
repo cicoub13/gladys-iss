@@ -9,9 +9,12 @@ Project-specific notes. Generic rules live in `CLAUDE.md`, user-facing ones in `
   dashboards/scenes:
   - widget `iss_passes` (`WIDGET_KEY`, `src/widget-content.js`), image key `iss-photo` (`ISS_IMAGE_KEY`);
   - scene trigger `pass_starting` (`SCENE_TRIGGER_KEY`, `src/scene-events.js`), filter field `direction`,
-    variables `start_time`, `max_elevation_deg`, `duration_seconds`, `direction`;
-  - scene action `next_pass` (`SCENE_ACTION_KEY`, `src/scene-actions.js`), outputs `found`, `start_time`,
-    `minutes_until`, `max_elevation_deg`, `duration_seconds`, `direction`.
+    variables `start_date`, `start_hour`, `max_elevation_deg`, `duration_seconds`, `direction`,
+    `direction_name`;
+  - scene action `next_pass` (`SCENE_ACTION_KEY`, `src/scene-actions.js`), outputs `found`, `start_date`,
+    `start_hour`, `minutes_until`, `max_elevation_deg`, `duration_seconds`, `direction`, `direction_name`.
+- `start_date`, `start_hour` and `direction_name` are written in the `language` config (`src/localize.js`),
+  in the local time zone: scenes receive no language from Gladys.
 - `direction` values are exactly the 8 compass points `N NE E SE S SW W NW` from
   `compassFromAzimuth` (direction the pass _rises_ from); the manifest options must match.
 

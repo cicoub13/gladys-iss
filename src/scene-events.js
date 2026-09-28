@@ -3,27 +3,31 @@
 // the SDK's `publishSceneEvent`.
 // -----------------------------------------------------------------------------
 
+import { localizePass } from './localize.js';
+
 // The trigger this event fires, as declared in the manifest `scene_triggers`.
 export const SCENE_TRIGGER_KEY = 'pass_starting';
 
-// A little time to actually step outside once the trigger fires.
-export const DEFAULT_LEAD_TIME_MS = 90 * 1000;
+// A little time to actually step outside once the trigger fires. The user
+// overrides it with the `lead_time_minutes` configuration.
+export const DEFAULT_LEAD_TIME_MS = 5 * 60 * 1000;
 
 /**
  * Build the `data` object for the `pass_starting` scene event. Includes every
  * key declared in the manifest's `fields` (filters) and `variables` for this
  * trigger — here `direction` is declared in both, and sent once.
  * @param {import('./pass-predictor.js').Pass} pass - The pass about to start.
- * @returns {{direction: string, start_time: string, max_elevation_deg: number, duration_seconds: number}} The event data.
+ * @param {'en'|'fr'} language - Language of the human-readable variables.
+ * @returns {{direction: string, direction_name: string, start_date: string, start_hour: string, max_elevation_deg: number, duration_seconds: number}} The event data.
  * @example
- * buildPassStartingEventData(pass);
+ * buildPassStartingEventData(pass, 'fr');
  */
-export function buildPassStartingEventData(pass) {
+export function buildPassStartingEventData(pass, language) {
   return {
     direction: pass.direction,
-    start_time: pass.startTime.toISOString(),
     max_elevation_deg: Math.round(pass.maxElevationDeg),
     duration_seconds: pass.durationSeconds,
+    ...localizePass(pass, language),
   };
 }
 

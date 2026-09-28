@@ -65,6 +65,52 @@
           }
         }
       ]
+    },
+    {
+      "key": "lead_time_minutes",
+      "type": "number",
+      "label": {
+        "en": "Scene lead time (minutes)",
+        "fr": "Anticipation des scènes (minutes)"
+      },
+      "description": {
+        "en": "How long before a pass starts the \"ISS pass starting\" trigger fires.",
+        "fr": "Combien de temps avant le début d'un passage le déclencheur « Passage ISS en cours de démarrage » se déclenche."
+      },
+      "required": false,
+      "default": 5,
+      "min": 0,
+      "max": 60
+    },
+    {
+      "key": "language",
+      "type": "select",
+      "label": {
+        "en": "Scene language",
+        "fr": "Langue des scènes"
+      },
+      "description": {
+        "en": "Language of the date, time and direction handed to your scenes (notifications, voice messages).",
+        "fr": "Langue de la date, de l'heure et de la direction transmises à vos scènes (notifications, messages vocaux)."
+      },
+      "required": false,
+      "default": "fr",
+      "options": [
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français"
+          }
+        }
+      ]
     }
   ],
   "widgets": [
@@ -163,11 +209,19 @@
       ],
       "variables": [
         {
-          "key": "start_time",
+          "key": "start_date",
           "type": "string",
           "label": {
-            "en": "Start time",
-            "fr": "Heure de début"
+            "en": "Start date (local)",
+            "fr": "Date de début (locale)"
+          }
+        },
+        {
+          "key": "start_hour",
+          "type": "string",
+          "label": {
+            "en": "Start time (local)",
+            "fr": "Heure de début (locale)"
           }
         },
         {
@@ -193,6 +247,14 @@
             "en": "Direction",
             "fr": "Direction"
           }
+        },
+        {
+          "key": "direction_name",
+          "type": "string",
+          "label": {
+            "en": "Direction (full name)",
+            "fr": "Direction (en toutes lettres)"
+          }
         }
       ]
     }
@@ -215,11 +277,19 @@
           }
         },
         {
-          "key": "start_time",
+          "key": "start_date",
           "type": "string",
           "label": {
-            "en": "Start time",
-            "fr": "Heure de début"
+            "en": "Start date (local)",
+            "fr": "Date de début (locale)"
+          }
+        },
+        {
+          "key": "start_hour",
+          "type": "string",
+          "label": {
+            "en": "Start time (local)",
+            "fr": "Heure de début (locale)"
           }
         },
         {
@@ -252,6 +322,14 @@
           "label": {
             "en": "Direction",
             "fr": "Direction"
+          }
+        },
+        {
+          "key": "direction_name",
+          "type": "string",
+          "label": {
+            "en": "Direction (full name)",
+            "fr": "Direction (en toutes lettres)"
           }
         }
       ]
