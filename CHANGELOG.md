@@ -4,6 +4,8 @@ All notable changes to the ISS Overhead integration for Gladys Assistant.
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-09-28
+
 ### Changed
 
 - The widget shows the pass times in your local time instead of UTC, and the
