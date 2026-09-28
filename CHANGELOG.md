@@ -4,6 +4,12 @@ All notable changes to the ISS Overhead integration for Gladys Assistant.
 
 ## [Unreleased]
 
+### Changed
+
+- The widget shows the pass times in your local time instead of UTC, and the
+  date format and directions in the language of your Gladys (e.g. "28/09
+  19:49", "O" for west in French).
+
 ## [0.3.0] - 2026-09-28
 
 ### Added

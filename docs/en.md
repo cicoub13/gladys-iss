@@ -15,7 +15,7 @@ The **ISS Passes** widget displays:
 - a photo of the station, and how long until the next visible pass, with its
   maximum elevation;
 - the next few passes, with their time, duration and the direction the ISS
-  rises from;
+  rises from (local time, in the language of your Gladys);
 - whether the ISS is visible tonight, and whether the orbital data used to
   compute passes is fresh.
 

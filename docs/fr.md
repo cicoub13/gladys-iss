@@ -17,7 +17,7 @@ Le widget **Passages ISS** affiche :
 - une photo de la station, et dans combien de temps aura lieu le prochain
   passage, avec son élévation maximale ;
 - les prochains passages, avec leur heure, leur durée et la direction depuis
-  laquelle l'ISS se lève ;
+  laquelle l'ISS se lève (à l'heure locale, dans la langue de votre Gladys) ;
 - si l'ISS est visible ce soir, et si les données orbitales utilisées pour le
   calcul sont à jour.
 

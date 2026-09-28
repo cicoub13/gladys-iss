@@ -103,7 +103,9 @@ async function fetchHouse() {
 // Registered once, before connecting: the SDK stores them by key and keeps
 // answering with them across reconnections.
 
-gladys.onWidgetGet(WIDGET_KEY, () => buildWidgetContent(passes, { tleStale: tleSource.isStale() }));
+gladys.onWidgetGet(WIDGET_KEY, ({ language }) =>
+  buildWidgetContent(passes, { language, tleStale: tleSource.isStale() }),
+);
 
 gladys.onWidgetGetImage(async (imageKey) => {
   if (imageKey !== ISS_IMAGE_KEY) {
