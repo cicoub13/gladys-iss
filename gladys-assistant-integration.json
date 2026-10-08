@@ -11,6 +11,7 @@
   "gladys_version": ">=5.1.0",
   "cover_image": "https://raw.githubusercontent.com/cicoub13/gladys-iss/main/cover.jpg",
   "categories": ["environment"],
+  "transports": ["cloud"],
   "location": true,
   "config_schema": [
     {

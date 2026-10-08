@@ -4,6 +4,11 @@ All notable changes to the ISS Overhead integration for Gladys Assistant.
 
 ## [Unreleased]
 
+### Changed
+
+- The integration now appears under the "Cloud" filter of the Gladys
+  integration catalog.
+
 ## [0.3.1] - 2026-09-28
 
 ### Changed
