@@ -13,6 +13,8 @@ export const DEFAULT_CONFIG = {
   lookahead_days: 5,
   lead_time_minutes: 5,
   language: 'fr',
+  // Selector of the house chosen in the configuration; null = first located house.
+  house: null,
 };
 
 // The only lookahead windows the manifest `select` offers — a stale/corrupted
@@ -24,7 +26,7 @@ const MAX_LEAD_TIME_MINUTES = 60;
 /**
  * Merge the user configuration with the defaults and coerce the types.
  * @param {Record<string, unknown>} [raw] - Configuration returned by the SDK.
- * @returns {{min_elevation_deg: number, lookahead_days: number, lead_time_minutes: number, language: 'en'|'fr'}} The normalized configuration.
+ * @returns {{min_elevation_deg: number, lookahead_days: number, lead_time_minutes: number, language: 'en'|'fr', house: string|null}} The normalized configuration.
  * @example
  * normalizeConfig({ min_elevation_deg: '15', lookahead_days: '5' });
  */
@@ -53,5 +55,8 @@ export function normalizeConfig(raw) {
 
   const language = LANGUAGES.includes(source.language) ? source.language : DEFAULT_CONFIG.language;
 
-  return { min_elevation_deg, lookahead_days, lead_time_minutes, language };
+  // A cleared select can come back as '' or null: both mean "no house chosen".
+  const house = typeof source.house === 'string' && source.house !== '' ? source.house : DEFAULT_CONFIG.house;
+
+  return { min_elevation_deg, lookahead_days, lead_time_minutes, language, house };
 }

@@ -21,16 +21,18 @@ Project-specific notes. Generic rules live in `CLAUDE.md`, user-facing ones in `
 ## Data flow (`index.js` wires everything, holds no logic)
 
 1. `connected` → `InitRetry.start()` (`src/lifecycle.js`) runs `initialize()`: `getConfig()` →
-   `normalizeConfig` → `getHouses()` (first house with lat/lon; `location: true` grants it, 403 otherwise)
-   → `ensureTle()` → `recomputePasses()` → `setConnectionStatus(true)`.
+   `normalizeConfig` → `getHouses()` via `fetchHouse` (`src/house.js`: the located house whose `selector`
+   is the `house` config, else the first house with lat/lon, with a warn log when a chosen house is
+   unknown/unlocated; `location: true` grants it, 403 otherwise) → `ensureTle()` → `recomputePasses()` → `setConnectionStatus(true)`.
 2. Failed init retries with exponential backoff 30 s → 30 min cap, "equal jitter" (upper half of the
    delay); a newer `start()`/`stop()` bumps `generation` so a superseded attempt never schedules a retry.
    Each failure also sets `setConnectionStatus(false, {en, fr})`.
 3. Module-level state in `index.js`: `config`, `house`, `passes` (in memory only). Widget/action handlers
    read the cached `passes`; they never compute on request.
 4. `setInterval` every 6 h (armed at startup, independent of init success): `ensureTle()` + recompute.
-5. `onConfigUpdated` → recompute + `gladys.requestWidgetRefresh(WIDGET_KEY)`.
-6. House coordinates have no update event: only re-fetched on each (re)connection.
+5. `onConfigUpdated` → `refreshHouse` (re-reads the houses, keeps the previous house if that fails) →
+   recompute + `gladys.requestWidgetRefresh(WIDGET_KEY)`.
+6. House coordinates have no update event: only re-fetched on each (re)connection and config update.
 7. `connect()` rejection (token refused at first attempt) is logged, not fatal: the SDK keeps retrying.
    An unhandled rejection anywhere → log + `process.exit(1)` (`exitOnUnhandledRejection`).
 
@@ -63,6 +65,8 @@ Project-specific notes. Generic rules live in `CLAUDE.md`, user-facing ones in `
 
 - `min_elevation_deg`: number in [0, 90], else default 10.
 - `lookahead_days`: manifest `select` sends strings `"3"|"5"|"7"`; anything else snaps to 5.
+- `house`: `select` with `source: "houses"` (no `options`/`default`, needs Gladys ≥ 5.2.0); stored value is
+  the house `selector`. Non-string or `''` → `null` = no choice. The integration never `setConfig`s it.
 - `getConfig()` can return `null` — hence `raw ?? {}`, not a default parameter.
 
 ## Widget / scene specifics

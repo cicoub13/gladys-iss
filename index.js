@@ -18,6 +18,7 @@
 import { readFile } from 'node:fs/promises';
 import { GladysIntegration, logger } from '@gladysassistant/integration-sdk';
 import { normalizeConfig } from './src/config.js';
+import { fetchHouse, refreshHouse } from './src/house.js';
 import { TleSource } from './src/tle-source.js';
 import { findVisiblePasses } from './src/pass-predictor.js';
 import { buildWidgetContent, WIDGET_KEY, ISS_IMAGE_KEY } from './src/widget-content.js';
@@ -87,17 +88,8 @@ async function ensureTle() {
   }
 }
 
-async function fetchHouse() {
-  // `location: true` in the manifest is what grants this call (403 otherwise).
-  const houses = await gladys.getHouses();
-  // MVP simplification: a single house with usable coordinates. Multi-house
-  // support (a widget setting to pick one) is left for a later version.
-  const candidate = houses.find((entry) => entry.latitude != null && entry.longitude != null);
-  if (!candidate) {
-    throw new Error('No house with a known location');
-  }
-  return { latitude: candidate.latitude, longitude: candidate.longitude };
-}
+// `location: true` in the manifest is what grants this call (403 otherwise).
+const getHouses = () => gladys.getHouses();
 
 // --- Capabilities ------------------------------------------------------------
 // Registered once, before connecting: the SDK stores them by key and keeps
@@ -124,6 +116,8 @@ gladys.onConfigUpdated(async (newConfig) => {
   logger.info('onConfigUpdated -> new configuration received');
   try {
     config = normalizeConfig(newConfig);
+    // The chosen house may have changed: re-read it before recomputing.
+    house = await refreshHouse({ current: house, getHouses, selector: config.house, logger });
     recomputePasses();
     // The passes just changed under every open dashboard: nudge them instead
     // of letting the card sit on stale content until its TTL expires.
@@ -137,7 +131,7 @@ gladys.onConfigUpdated(async (newConfig) => {
 async function initialize() {
   config = normalizeConfig(await gladys.getConfig());
   // Coordinates have no update event: re-fetch them on every reconnection.
-  house = await fetchHouse();
+  house = await fetchHouse(getHouses, config.house, logger);
   await ensureTle();
   recomputePasses();
   await gladys.setConnectionStatus(true);

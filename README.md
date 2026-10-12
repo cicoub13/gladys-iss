@@ -9,17 +9,21 @@ container, on the JavaScript SDK
 starting from the official
 [integration template](https://github.com/GladysAssistant/integration-template-js).
 
-> **Requires Gladys ≥ 5.1.0.** The three capabilities this integration is made
+> **Requires Gladys ≥ 5.2.0.** The three capabilities this integration is made
 > of — dashboard widgets, scene triggers/actions declared by an external
 > integration, and the `provider` manifest type — shipped in Gladys **5.1.0**
-> (they are absent from 5.0.x, whose manifest schema rejects this manifest).
+> (they are absent from 5.0.x, whose manifest schema rejects this manifest);
+> the house picker of the configuration (a `source: "houses"` select) needs
+> Gladys **5.2.0**, an older core rejects the unknown source.
 > `gladys_version` declares that floor, and the catalog filters on it.
 
 ## What it does
 
 - Fetches the ISS's orbital parameters (TLE) from
   [Celestrak](https://celestrak.org/) — no API key needed.
-- Computes visible passes over your house (`src/pass-predictor.js`): above the
+- Computes visible passes over the house picked in the configuration, or the
+  first located one when none is picked (`src/house.js`,
+  `src/pass-predictor.js`): above the
   horizon, house in darkness, ISS still sunlit — using
   [`satellite.js`](https://github.com/shashwatak/satellite-js) for orbit
   propagation and [`suncalc`](https://github.com/mourner/suncalc) for the
@@ -77,6 +81,7 @@ _Captured on a Gladys 5.1 dashboard with simulated devices and states — values
 │  ├─ widget-content.js              # pure: Pass[] -> widget content envelope
 │  ├─ scene-events.js                # pass_starting scheduler
 │  ├─ scene-actions.js               # next_pass action handler
+│  ├─ house.js                       # chosen house, or first located one
 │  └─ config.js                      # config defaults + coercion
 ├─ assets/
 │  └─ iss-photo.jpg                  # the widget's focal image
@@ -90,7 +95,7 @@ _Captured on a Gladys 5.1 dashboard with simulated devices and states — values
 
 ## Develop locally
 
-Requires a Gladys server on 5.1.0 or later.
+Requires a Gladys server on 5.2.0 or later.
 
 ```bash
 npm install

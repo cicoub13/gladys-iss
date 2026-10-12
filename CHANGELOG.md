@@ -4,6 +4,16 @@ All notable changes to the ISS Overhead integration for Gladys Assistant.
 
 ## [Unreleased]
 
+### Added
+
+- New "House" setting: with several houses in Gladys, choose the one the ISS
+  passes are predicted for. Left empty, the first house with a location is
+  used, as before: nothing to change on an existing install.
+
+### Changed
+
+- Requires Gladys 5.2.0 or later.
+
 ## [0.3.2] - 2026-10-08
 
 ### Changed

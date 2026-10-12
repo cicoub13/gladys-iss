@@ -1,8 +1,8 @@
 # ISS Overhead
 
-> **Requires Gladys 5.1 or later.** The dashboard widget and the scene
-> trigger/action this integration is made of ship with Gladys 5.1; on an
-> earlier version the integration cannot be installed.
+> **Requires Gladys 5.2 or later.** The house picker of the configuration
+> needs Gladys 5.2 (the dashboard widget and the scene trigger/action ship
+> with Gladys 5.1); on an earlier version the integration cannot be installed.
 
 Predicts the next visible passes of the International Space Station over your
 house, shows them on a dashboard widget, and can trigger a scene right before
@@ -47,6 +47,7 @@ message.
 
 | Key               | Default   | Description                                                                |
 | ----------------- | --------- | -------------------------------------------------------------------------- |
+| House             | (empty)   | House the passes are predicted for (see below).                            |
 | Minimum elevation | 10°       | Passes that never rise above this angle are ignored.                       |
 | Prediction window | 5 days    | How far ahead passes are predicted (3, 5 or 7 days).                       |
 | Scene lead time   | 5 minutes | How long before a pass starts the "ISS pass starting" trigger fires (≤60). |
@@ -54,6 +55,12 @@ message.
 
 The integration needs your house's location, granted automatically when you
 install it (no address to type in).
+
+With several houses in Gladys, pick the one to watch the sky from in
+**House**. Left empty, or if the chosen house is deleted or has no location
+anymore, the first house (in alphabetical order) that has a location is used.
+Make sure the house is located in Gladys (house settings, map): a house
+without a location cannot be used.
 
 ## No API key needed
 
