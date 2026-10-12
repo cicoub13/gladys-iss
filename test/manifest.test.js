@@ -14,10 +14,11 @@ import { SCENE_ACTION_KEY } from '../src/scene-actions.js';
 import { SCENE_TRIGGER_KEY } from '../src/scene-events.js';
 
 const MAX_COVER_BYTES = 150 * 1024;
-// The Gladys release that ships the provider type, the dashboard widgets and
-// the scene triggers/actions this integration is made of: v5.0.4's manifest
-// schema still had none of them.
-const MIN_GLADYS_VERSION = '>=5.1.0';
+// The Gladys release that accepts the `source: "houses"` select of the house
+// picker (5.2.0): an older core rejects a manifest with an unknown source.
+// 5.1.0 already shipped the provider type, the widgets and the scene
+// triggers/actions this integration is made of.
+const MIN_GLADYS_VERSION = '>=5.2.0';
 // INTEGRATION_CATALOG_CATEGORIES in the core: the browse categories of the
 // catalog sidebar. The manifest schema deliberately has no enum (an unknown
 // key is dropped with a warning, never a rejection) — so a typo here would
@@ -86,6 +87,23 @@ test('the widget, trigger and action keys the code registers are the ones the ma
     manifest.scene_actions.map((action) => action.key),
     [SCENE_ACTION_KEY],
   );
+});
+
+test('the config keys are the ones the code reads, existing ones unchanged', () => {
+  // A renamed key silently resets what users saved under the old one.
+  assert.deepEqual(manifest.config_schema.map((entry) => entry.key).sort(), Object.keys(DEFAULT_CONFIG).sort());
+});
+
+test('the house config field is an optional select over the houses of Gladys', () => {
+  const field = manifest.config_schema.find((entry) => entry.key === 'house');
+  assert.equal(field.type, 'select');
+  assert.equal(field.source, 'houses');
+  // `source` excludes `options` and `default`; optional so existing installs
+  // keep working with nothing chosen (fallback to the first located house).
+  assert.equal(field.options, undefined);
+  assert.equal(field.default, undefined);
+  assert.equal(field.required, false);
+  assert.ok(field.label.en && field.label.fr);
 });
 
 test('the min_elevation_deg config default matches the one the code falls back to', () => {

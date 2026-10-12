@@ -10,9 +10,21 @@ test('normalizeConfig falls back to the defaults when given nothing', () => {
 
 test('normalizeConfig coerces string values from a form', () => {
   assert.deepEqual(
-    normalizeConfig({ min_elevation_deg: '15', lookahead_days: '7', lead_time_minutes: '10', language: 'fr' }),
-    { min_elevation_deg: 15, lookahead_days: 7, lead_time_minutes: 10, language: 'fr' },
+    normalizeConfig({
+      min_elevation_deg: '15',
+      lookahead_days: '7',
+      lead_time_minutes: '10',
+      language: 'fr',
+      house: 'main-house',
+    }),
+    { min_elevation_deg: 15, lookahead_days: 7, lead_time_minutes: 10, language: 'fr', house: 'main-house' },
   );
+});
+
+test('normalizeConfig treats an unset, cleared or non-string house as "no house chosen"', () => {
+  for (const house of [undefined, null, '', 42]) {
+    assert.equal(normalizeConfig({ house }).house, null);
+  }
 });
 
 test('normalizeConfig falls back to the default lead time when unset or outside [0, 60]', () => {

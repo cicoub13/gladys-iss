@@ -1,9 +1,9 @@
 # ISS Overhead
 
-> **Nécessite Gladys 5.1 ou supérieur.** Le widget de dashboard et le
-> déclencheur/action de scène dont cette intégration est faite sont livrés
-> avec Gladys 5.1 ; sur une version antérieure, elle ne peut pas être
-> installée.
+> **Nécessite Gladys 5.2 ou supérieur.** Le choix de la maison dans la
+> configuration nécessite Gladys 5.2 (le widget de dashboard et le
+> déclencheur/action de scène sont livrés avec Gladys 5.1) ; sur une version
+> antérieure, l'intégration ne peut pas être installée.
 
 Prédit les prochains passages visibles de la Station Spatiale Internationale
 au-dessus de votre maison, les affiche sur un widget de dashboard, et peut
@@ -49,6 +49,7 @@ notification que pour un message vocal.
 
 | Clé                     | Défaut    | Description                                                                                         |
 | ----------------------- | --------- | --------------------------------------------------------------------------------------------------- |
+| Maison                  | (vide)    | Maison pour laquelle les passages sont prédits (voir ci-dessous).                                   |
 | Élévation minimale      | 10°       | Les passages ne dépassant jamais cette élévation sont ignorés.                                      |
 | Fenêtre de prédiction   | 5 jours   | Sur combien de jours prédire les passages (3, 5 ou 7).                                              |
 | Anticipation des scènes | 5 minutes | Combien de temps avant un passage le déclencheur « Passage ISS en cours de démarrage » part (≤ 60). |
@@ -56,6 +57,13 @@ notification que pour un message vocal.
 
 L'intégration a besoin de la localisation de votre maison, accordée
 automatiquement à l'installation (aucune adresse à saisir).
+
+Si vous avez plusieurs maisons dans Gladys, choisissez dans **Maison** celle
+depuis laquelle observer le ciel. Laissé vide, ou si la maison choisie est
+supprimée ou n'a plus de localisation, la première maison (par ordre
+alphabétique) qui a une localisation est utilisée. Vérifiez que la maison est
+bien localisée dans Gladys (paramètres de la maison, carte) : une maison sans
+localisation ne peut pas être utilisée.
 
 ## Aucune clé API nécessaire
 
