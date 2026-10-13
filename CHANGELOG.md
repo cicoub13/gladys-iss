@@ -4,6 +4,8 @@ All notable changes to the ISS Overhead integration for Gladys Assistant.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-13
+
 ### Added
 
 - New "House" setting: with several houses in Gladys, choose the one the ISS
