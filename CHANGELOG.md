@@ -4,6 +4,12 @@ All notable changes to the ISS Overhead integration for Gladys Assistant.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-13
+
+### Changed
+
+- Maintenance release: dependency and build updates, no functional change.
+
 ## [0.4.0] - 2026-10-13
 
 ### Added
