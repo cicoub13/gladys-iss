@@ -1,16 +1,13 @@
 # ISS Overhead
 
-> **Nécessite Gladys 5.2 ou supérieur.** Le choix de la maison dans la
-> configuration nécessite Gladys 5.2 (le widget de dashboard et le
-> déclencheur/action de scène sont livrés avec Gladys 5.1) ; sur une version
-> antérieure, l'intégration ne peut pas être installée.
+## Présentation
 
 Prédit les prochains passages visibles de la Station Spatiale Internationale
 au-dessus de votre maison, les affiche sur un widget de dashboard, et peut
 déclencher une scène juste avant qu'un passage commence — parfait pour une
 automatisation "va voir dehors".
 
-## Ce qui est affiché
+### Ce qui est affiché
 
 Le widget **Passages ISS** affiche :
 
@@ -26,7 +23,7 @@ l'horizon, que votre maison est dans le noir, et que l'ISS elle-même est
 encore éclairée par le soleil — les conditions qui en font une "étoile"
 brillante et rapide dans le ciel du soir ou du petit matin.
 
-## Automatisations
+### Automatisations
 
 - **Déclencheur « Passage ISS en cours de démarrage »** — se déclenche peu
   avant le début d'un passage visible. Filtrable par direction de lever.
@@ -44,6 +41,22 @@ configuration et à l'heure locale : `start_date` (ex. « lundi 28 septembre »)
 _start_date_ à _start_hour_, direction _direction_name_. » donne « L'ISS passe
 lundi 28 septembre à 19:49, direction ouest. », aussi bien pour une
 notification que pour un message vocal.
+
+## Prérequis
+
+- **Gladys 5.2 ou supérieur.** Le choix de la maison dans la configuration
+  nécessite Gladys 5.2 (le widget de dashboard et le déclencheur/action de
+  scène sont livrés avec Gladys 5.1) ; sur une version antérieure,
+  l'intégration ne peut pas être installée.
+- Une **maison localisée** dans Gladys (paramètres de la maison, carte) : les
+  passages sont calculés pour ses coordonnées.
+- Un **accès à internet** depuis le serveur Gladys, pour télécharger les
+  données orbitales sur Celestrak.
+
+### Aucune clé API nécessaire
+
+Les données orbitales (TLE) sont récupérées sur [Celestrak](https://celestrak.org/),
+une source publique gratuite — rien à créer comme compte.
 
 ## Configuration
 
@@ -65,7 +78,47 @@ alphabétique) qui a une localisation est utilisée. Vérifiez que la maison est
 bien localisée dans Gladys (paramètres de la maison, carte) : une maison sans
 localisation ne peut pas être utilisée.
 
-## Aucune clé API nécessaire
+## Dépannage
 
-Les données orbitales (TLE) sont récupérées sur [Celestrak](https://celestrak.org/),
-une source publique gratuite — rien à créer comme compte.
+- **Statut « L'initialisation a échoué, consultez les logs de
+  l'intégration. »** : l'intégration n'a pas pu lire la localisation de votre
+  maison ou télécharger les données orbitales. Elle réessaie d'elle-même, en
+  attendant un peu plus à chaque fois (jusqu'à 30 minutes). Ouvrez l'onglet
+  **Logs** de l'intégration pour en connaître la cause :
+  - `No house with a known location` : aucune maison n'est localisée dans
+    Gladys. Placez votre maison sur la carte dans ses paramètres.
+  - `Celestrak request failed with status …`, ou un délai dépassé : Celestrak
+    n'a pas pu être joint. Vérifiez l'accès à internet du serveur Gladys.
+- **Le widget n'affiche que « Visible bientôt : Non »** : aucun passage
+  visible n'a été trouvé dans la fenêtre de prédiction. L'ISS n'est visible
+  que dans les conditions décrites plus haut : plusieurs jours d'affilée sans
+  passage visible, c'est normal. Vous pouvez baisser l'**Élévation minimale**
+  ou élargir la **Fenêtre de prédiction** à 7 jours. Le widget a aussi cet
+  aspect tant que l'intégration n'a pas encore de localisation ou de données
+  orbitales (voir le point précédent).
+- **« Données orbitales : Périmé » sur le widget** : les données orbitales ont
+  plus de 24 heures, car Celestrak n'a pas pu être joint. L'intégration
+  continue de calculer les passages avec les dernières données obtenues et
+  réessaie toutes les 6 heures. Si cela dure, vérifiez l'accès à internet du
+  serveur Gladys.
+- **Les passages sont calculés pour la mauvaise maison** : la maison choisie
+  dans **Maison** n'existe plus ou n'est plus localisée. Les logs indiquent
+  alors
+  `The chosen house "…" is unknown or has no location, using "…" instead`.
+  Choisissez une maison localisée dans **Maison**, ou placez celle
+  choisie sur la carte.
+- **La maison a été déplacée, mais les passages n'ont pas changé** : la
+  localisation est lue au démarrage de l'intégration et à chaque
+  enregistrement de sa configuration. Enregistrez de nouveau la
+  configuration.
+- **Le déclencheur « Passage ISS en cours de démarrage » ne s'est pas
+  déclenché** : il ne part que pour les passages visibles qui dépassent
+  l'**Élévation minimale** et, si des directions sont cochées dans son filtre,
+  uniquement pour celles-ci. Un passage dont
+  l'heure de déclenchement (début moins l'**Anticipation des scènes**) est
+  déjà dépassée au démarrage de l'intégration ou à l'enregistrement de la
+  configuration est ignoré.
+- **« Obtenir le prochain passage ISS » renvoie des variables vides** : aucun
+  passage visible n'est prévu dans la fenêtre de prédiction. La variable
+  **Un passage a été trouvé** vaut alors faux : testez-la dans votre scène
+  avant d'utiliser les autres.
