@@ -1,14 +1,12 @@
 # ISS Overhead
 
-> **Requires Gladys 5.2 or later.** The house picker of the configuration
-> needs Gladys 5.2 (the dashboard widget and the scene trigger/action ship
-> with Gladys 5.1); on an earlier version the integration cannot be installed.
+## Overview
 
 Predicts the next visible passes of the International Space Station over your
 house, shows them on a dashboard widget, and can trigger a scene right before
 one starts — perfect for "go look outside" automations.
 
-## What it shows
+### What it shows
 
 The **ISS Passes** widget displays:
 
@@ -24,7 +22,7 @@ is in the dark, and the ISS itself is still lit by the sun — the same
 conditions that make it a bright, fast-moving "star" in the evening or
 early-morning sky.
 
-## Automations
+### Automations
 
 - **Trigger: "ISS pass starting"** — fires shortly before a visible pass
   begins. Optionally filter by the direction it rises from. Use it to turn on
@@ -42,6 +40,21 @@ code, e.g. "W") stays available for scenes that compare it. For example "The ISS
 rising in the _direction_name_." gives "The ISS passes on Monday, September 28
 at 07:49 PM, rising in the west.", for a notification as well as a voice
 message.
+
+## Prerequisites
+
+- **Gladys 5.2 or later.** The house picker of the configuration needs Gladys
+  5.2 (the dashboard widget and the scene trigger/action ship with Gladys 5.1);
+  on an earlier version the integration cannot be installed.
+- A **house with a location** in Gladys (house settings, map): the passes are
+  computed for its coordinates.
+- **Internet access** from the Gladys server, to download the orbital data
+  from Celestrak.
+
+### No API key needed
+
+Orbital data (TLE) is fetched from [Celestrak](https://celestrak.org/), a free
+public source — nothing to sign up for.
 
 ## Configuration
 
@@ -62,7 +75,38 @@ anymore, the first house (in alphabetical order) that has a location is used.
 Make sure the house is located in Gladys (house settings, map): a house
 without a location cannot be used.
 
-## No API key needed
+## Troubleshooting
 
-Orbital data (TLE) is fetched from [Celestrak](https://celestrak.org/), a free
-public source — nothing to sign up for.
+- **Status "Initialization failed, check the integration logs."**: the
+  integration could not read the location of your house or download the
+  orbital data. It tries again on its own, waiting a bit longer each time (up
+  to 30 minutes). Open the **Logs** tab of the integration to see why:
+  - `No house with a known location`: no house in Gladys has a location.
+    Place your house on the map in its settings.
+  - `Celestrak request failed with status …`, or a timeout: Celestrak could
+    not be reached. Check the internet access of the Gladys server.
+- **The widget only shows "Visible soon: No"**: no visible pass was found in
+  the prediction window. The ISS is only visible under the conditions
+  described above, so several days in a row without a visible pass are
+  normal. You can lower the **Minimum elevation** or widen the **Prediction
+  window** to 7 days. The widget also looks like this while the integration
+  has no house location or no orbital data yet (see the previous point).
+- **"Orbital data: Stale" on the widget**: the orbital data is more than
+  24 hours old, because Celestrak could not be reached. The integration keeps
+  computing the passes with the last data it got and tries again every
+  6 hours. Check the internet access of the Gladys server if it lasts.
+- **The passes are computed for the wrong house**: the house chosen in
+  **House** no longer exists or has no location anymore. The logs then show
+  `The chosen house "…" is unknown or has no location, using "…" instead`.
+  Pick a located house in **House**, or place the chosen one on the map.
+- **The house moved, but the passes did not change**: the location is read
+  when the integration starts and each time you save its configuration. Save
+  the configuration again.
+- **The "ISS pass starting" trigger did not fire**: it only fires for
+  visible passes that rise above the **Minimum elevation** and, when its
+  filter has directions selected, only for those directions. A pass whose trigger time (start minus the **Scene
+  lead time**) is already over when the integration starts or when you save
+  the configuration is skipped.
+- **"Get next ISS pass" gives empty variables**: no visible pass is predicted
+  in the prediction window. The **A pass was found** variable is then false:
+  check it in your scene before using the others.
