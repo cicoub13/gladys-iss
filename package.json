@@ -18,8 +18,8 @@
   },
   "dependencies": {
     "@gladysassistant/integration-sdk": "^0.16.0",
-    "satellite.js": "^7.1.0",
-    "suncalc": "^2.1.2"
+    "satellite.js": "^7.2.0",
+    "suncalc": "^2.1.4"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
